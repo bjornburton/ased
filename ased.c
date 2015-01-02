@@ -31,6 +31,7 @@ void initComparator(void);
 
 /* Global variables */
 volatile char overflow = 0; 
+volatile char sinewave = 0; 
 
 int main(void)
 {
@@ -38,8 +39,8 @@ int main(void)
  /* set the led port direction */
   DDRB |= (1<<LED_RED_DD);
 
- /* turn the led on */
-  ledcntl(ON);       //turn the LED on
+ /* turn the led off */
+  ledcntl(OFF); 
 
  /* set up the timer */
   initTimerCounter1();
@@ -47,8 +48,8 @@ int main(void)
  /* set up the comparator */
    initComparator();
 
- /*** set pull-up temprarily ***/
-  PORTB |= (1<<PB1);
+ /* set pull-up temprarily */
+  // PORTB |= (1<<PB1);
 
  /* Global Int Enable */
   sei();
@@ -60,33 +61,31 @@ int main(void)
 
  for (;;) // forever
   {
-
-  /* preset the counter at each itteration. Prescaler is clk/16484.
-     0.5 *(8e6/16384) is 244.14. 256-244=12, so 12 is it */
-  TCNT1 = 12;
+   static char wavelimit = 0;
 
   /* now we wait in idle for any interrupt event */
   sleep_mode();
 
+
   /* some interrupt was detected! Let's see which one */
   if(overflow == TRUE) 
     {
-      static unsigned char intcount = 0; 
-     
-      /* each count is about 1/2 second */
-      if(++intcount == 1) //toggle after about 1/2 second
-        {
-         static char toggle = 0;
-         
-         if( (toggle = (toggle)?0:1) ) ledcntl(ON);
-           else ledcntl(OFF);
-         
-         /* since it toggled the int counter is reset */
-         intcount = 0;
-         }
+     ledcntl(OFF); 
+     wavelimit = 15; 
+     overflow = FALSE; //reset int flag
+    }
+   else if(sinewave == TRUE)
+    {
+    wavelimit = (wavelimit)?wavelimit-1:0; 
+     if(!wavelimit)
+       {
+        /* preset the counter at each interrupt. Prescaler is clk/16484.
+           0.5 *(8e6/16384) is 244.14. 256-244=12, so 12 is it */
+        TCNT1 = 12;
+        ledcntl(ON);
+        sinewave = FALSE;
+        }
 
-    /* reset the flag */
-    overflow = FALSE; //reset int flag
     }
   }  
 
@@ -146,13 +145,13 @@ void initComparator(void)
 /* this is not much of an ISR */
 ISR(TIMER1_OVF_vect)
 {
- overflow = TRUE;
+  overflow = TRUE; 
 }
 
 /* Comparator ISR */
 ISR(ANA_COMP_vect)
 {
-// ACSR &= ~(1<<ACI);
+ sinewave = TRUE;
 }
 
 
