@@ -75,7 +75,7 @@ int main(void)
         {
          static char toggle = 0;
          
-         if(toggle = (toggle)?0:1) ledcntl(ON);
+         if( (toggle = (toggle)?0:1) ) ledcntl(ON);
            else ledcntl(OFF);
          
          /* since it toggled the int counter is reset */

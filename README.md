@@ -50,7 +50,7 @@ clipped. The inbuilt comparator seems like the right choice, for now.
 
 Both comparator inputs have pins but AIN0 can be connected to a reference of
 1.1 VDC, leaving AIN1 to the signal. This is selected by setting bit ACBG of
-register ACSR.
+register ACSR. AN0 is PB0 marked "#0" on the Trinket.
 
 Rather than burning loops, waiting for something to happen for 16 ms, the
 comparator interrupt can be used. To enable this, set the ACIE bit of register
