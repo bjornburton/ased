@@ -23,7 +23,6 @@ Just for fun.
 # define FALSE 0
 
 
-
 /* Function Declarations */
 void delay(unsigned intervals);
 void ledcntl(char state);
@@ -58,8 +57,7 @@ int main(void)
 
  for (;;) // forever
   {
-   static unsigned char intcount = 0; 
-  
+
   /* preset the counter at each itteration. Prescaler is clk/16484.
      0.5 *(8e6/16384) is 244.14. 256-244=12, so 12 is it */
   TCNT1 = 12;
@@ -70,10 +68,12 @@ int main(void)
   /* some interrupt was detected! Let's see which one */
   if(overflow == TRUE) 
     {
+      volatile unsigned char intcount = 0; 
+     
       /* each count is about 1/2 second */
       if(++intcount == 1) //toggle after about 1/2 second
         {
-         static char toggle = 0;
+         volatile char toggle = 0;
          
          if( (toggle = (toggle)?0:1) ) ledcntl(ON);
            else ledcntl(OFF);
@@ -104,12 +104,12 @@ void initTimerCounter1(void)
  /* General Timer/Counter Control Register we will leave default */
  //GTCCR = ;
  
-/* Timer/Counter Control Register A we will leave default */
+ /* Timer/Counter Control Register A we will leave default */
  //TCCR0A = ;
 
  /* Timer/Counter1 Control Register we will leave default */
- //TCCR1 &= ~( (1<<COM1A1) | (1<<COM1A0) );
- //TCCR1 &= ~( (1<<COM1B1) | (1<<COM1B0) );
+ //TCCR1 = ;
+ //TCCR1 = ;
 
  /* set a very long prescal */
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
