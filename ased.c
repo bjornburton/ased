@@ -14,14 +14,17 @@ Just for fun.
 # include <avr/sleep.h> // have need of sleep
 # include <stdlib.h>
 
-/* LED port */
+/**** Defines *****/
+ /* LED port */
 # define LED_RED PORTB1
 # define LED_RED_DD DDB1
+ /* Bool*/
 # define ON 1
 # define OFF 0
 # define TRUE 1
 # define FALSE 0
-
+ /* Parameters */
+# define WAVETHRESHOLD 15
 
 /* Function Declarations */
 void delay(unsigned intervals);
@@ -61,31 +64,29 @@ int main(void)
 
  for (;;) // forever
   {
-   static char wavelimit = 0;
-
+   static char nowaves = WAVETHRESHOLD; 
   /* now we wait in idle for any interrupt event */
   sleep_mode();
 
 
   /* some interrupt was detected! Let's see which one */
-  if(overflow == TRUE) 
+  if(sinewave) 
     {
-     ledcntl(OFF); 
-     wavelimit = 15; 
-     overflow = FALSE; //reset int flag
-    }
-   else if(sinewave == TRUE)
-    {
-    wavelimit = (wavelimit)?wavelimit-1:0; 
-     if(!wavelimit)
+     nowaves = (nowaves)?nowaves-1:0; 
+     if(!nowaves)
        {
         /* preset the counter at each interrupt. Prescaler is clk/16484.
            0.5 *(8e6/16384) is 244.14. 256-244=12, so 12 is it */
         TCNT1 = 12;
         ledcntl(ON);
         sinewave = FALSE;
-        }
-
+       }
+    }
+   else if(overflow)
+    {
+     ledcntl(OFF); 
+     nowaves = WAVETHRESHOLD; 
+     overflow = FALSE; //reset int flag
     }
   }  
 
