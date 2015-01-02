@@ -45,7 +45,7 @@ int main(void)
   initTimerCounter1();
 
  /* set up the comparator */
-  initComparator();
+//  initComparator();
 
  /* Global Int Enable */
   sei();
@@ -68,12 +68,12 @@ int main(void)
   /* some interrupt was detected! Let's see which one */
   if(overflow == TRUE) 
     {
-      volatile unsigned char intcount = 0; 
+      static unsigned char intcount = 0; 
      
       /* each count is about 1/2 second */
       if(++intcount == 1) //toggle after about 1/2 second
         {
-         volatile char toggle = 0;
+         static char toggle = 0;
          
          if( (toggle = (toggle)?0:1) ) ledcntl(ON);
            else ledcntl(OFF);
