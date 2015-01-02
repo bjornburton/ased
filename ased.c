@@ -141,3 +141,10 @@ ISR(TIMER1_OVF_vect)
 {
  overflow = TRUE;
 }
+
+/* Comparator ISR */
+ISR(TIMER1_COMPA_vect)
+{
+}
+
+
