@@ -51,8 +51,14 @@ could use the ADC but that doesn't make too much sense as the input may spend a
 lot of time cliped. The inbuilt comparator seems like the right choice, for now.
 
 Both comparator inputs have pins but AIN0 can be connected to a reference of
-1.1 VDC, leaving AIN1 to the signal. The ref is selected by setting bit ACBG of
-register ACSR. Input AN0 is PB0 marked "#0" on the Trinket.
+1.1 VDC, leaving the negative input to the signal. The ref is selected by
+setting bit ACBG of register ACSR.
+
+The ideal input AN1, PB1, is connected to the LED in the Trinket!
+That's not a big issue since the ADC's MUX may be used. That MUX may address
+PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are available. Since PB3 and
+PB4 are use for USB, PB2 makes sense here. This is marked "#2" on the Trinket.
+PB2 connects the the MUX's ADC1. Use of the MUX is selected by setting bit ACME of port ADCSRB. ADC1 is set by setting bit MUX0 of register ADMUX 
 
 Rather than burning loops, waiting for something to happen for 16 ms, the
 comparator interrupt can be used. To enable this, set the ACIE bit of register

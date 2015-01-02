@@ -78,13 +78,13 @@ int main(void)
         /* preset the counter at each interrupt. Prescaler is clk/16484.
            0.5 *(8e6/16384) is 244.14. 256-244=12, so 12 is it */
         TCNT1 = 12;
-        ledcntl(ON);
+        ledcntl(OFF);
         sinewave = FALSE;
        }
     }
    else if(overflow)
     {
-     ledcntl(OFF); 
+     ledcntl(ON); 
      nowaves = WAVETHRESHOLD; 
      overflow = FALSE; //reset int flag
     }
@@ -112,9 +112,8 @@ void initTimerCounter1(void)
 
  /* Timer/Counter1 Control Register we will leave default */
  //TCCR1 = ;
- //TCCR1 = ;
 
- /* set a very long prescal */
+ /* set a very long prescal of 16384 counts */
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
 
  /* Timer/counter 1 overflow interupt enable */
@@ -123,9 +122,15 @@ void initTimerCounter1(void)
 }
 
 
-/* configure the comparator's interrupt */
+/* configure the comparator */
 void initComparator(void)
 {
+
+ /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
+ ADCSRB |= (1<<ACME);
+
+ /* ADC1 is set by setting bit MUX0 of register ADMUX */
+ ADMUX |= (1<<MUX0);
 
  /* Disable digital inputs to save power */
  DIDR0  |= ((1<<AIN1D)|(1<<AIN0D));
@@ -143,7 +148,7 @@ void initComparator(void)
 }
 
 
-/* this is not much of an ISR */
+/* Timer ISR */
 ISR(TIMER1_OVF_vect)
 {
   overflow = TRUE; 
