@@ -45,7 +45,10 @@ int main(void)
   initTimerCounter1();
 
  /* set up the comparator */
-//  initComparator();
+   initComparator();
+
+ /*** set pull-up temprarily ***/
+  PORTB |= (1<<PB1);
 
  /* Global Int Enable */
   sei();
@@ -124,7 +127,10 @@ void initTimerCounter1(void)
 void initComparator(void)
 {
 
- /* Connect the + input to the reference */
+ /* Disable digital inputs to save power */
+ DIDR0  |= ((1<<AIN1D)|(1<<AIN0D));
+ 
+ /* Connect the + input to the band-gap reference */
  ACSR |= (1<<ACBG);
  
  /* Enable the interrupt */
