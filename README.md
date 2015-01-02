@@ -42,15 +42,16 @@ I think it should be good enough. If we can muster 1 pf of gimmick, we will
 have 1/(2*pi*fc) of Xc. Ohms law indicates
 100e6 * (170 / ( (2*pi*60*1e-12)^-1 + 100e6)) = 6.16 volts peak, ignoring
 input pin capacitance. The steering diodes will keep the analog innards safe
-since the current is so low.
+since the current is so low. Supply voltage at "BAT" is 5.5 to 16 V and it has
+a red LED on-board.
 
 The Trinket runs at a speedy 8 MHz so the slow 60 Hz signal is no issue. One
-could use the ADC but that doesn't make too much sense as it will often be
-clipped. The inbuilt comparator seems like the right choice, for now.
+could use the ADC but that doesn't make too much sense as the input may spend a
+lot of time cliped. The inbuilt comparator seems like the right choice, for now.
 
 Both comparator inputs have pins but AIN0 can be connected to a reference of
-1.1 VDC, leaving AIN1 to the signal. This is selected by setting bit ACBG of
-register ACSR. AN0 is PB0 marked "#0" on the Trinket.
+1.1 VDC, leaving AIN1 to the signal. The ref is selected by setting bit ACBG of
+register ACSR. Input AN0 is PB0 marked "#0" on the Trinket.
 
 Rather than burning loops, waiting for something to happen for 16 ms, the
 comparator interrupt can be used. To enable this, set the ACIE bit of register
