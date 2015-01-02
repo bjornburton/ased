@@ -1,7 +1,7 @@
 /**************************************
 ASED
 Ancillary Service Electric Detector
-2014-12-29
+2015-01-01
 Bjorn Burton
 
 Just for fun.
