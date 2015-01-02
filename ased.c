@@ -133,12 +133,13 @@ void initComparator(void)
  /* Connect the + input to the band-gap reference */
  ACSR |= (1<<ACBG);
  
- /* Enable the interrupt */
- ACSR |= (1<<ACIE);
-
  /* Trigger on falling edge only */
  ACSR |= (1<<ACIS1);
  
+ /* Enable the analog comparator interrupt */
+ ACSR |= (1<<ACIE);
+
+
 }
 
 
@@ -149,8 +150,9 @@ ISR(TIMER1_OVF_vect)
 }
 
 /* Comparator ISR */
-ISR(TIMER1_COMPA_vect)
+ISR(ANA_COMP_vect)
 {
+// ACSR &= ~(1<<ACI);
 }
 
 

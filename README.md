@@ -20,7 +20,8 @@ The obvious solution is to have a high-impedance capacitive connection. Simple
 capacitive coupling can be had with a "gimmick"; a technique used since the
 1920s. This may be several turns of THHN around the large-gage insulated
 incomming line. Since the voltage is with respect to neutral, and neutral is
-bonded to ground, just the one wire is needed.
+bonded to ground, just the one wire is needed. No need to mess with conductors,
+just coupling to the electric field through the insulator.
 
 With this signal, a circuit and be built to detect the difference between
 having AC and having no AC, and provide a signal to indicate that state.
@@ -63,9 +64,17 @@ Of course, any interrupt function requires that bit I "Global Interrupt Enable"
 is set; usualy done through calling sei().
 
 The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
-register but the vector TIMER1_COMPA_vect is the simpler way.
+register but the vector ANA_COMP_vect is the simpler way.i
 
-A timer is needed to to encompase some number of waves so it can clearly discernon from off.
+Disable digital input buffers at AIN[1:0] to save power. This is done by
+setting AIN1D and AIN0D in register DIDR0.
+
+A timer is needed to to encompase some number of waves so it can clearly
+discern on from off. The timer is also interrupt based. The timer is set to
+interrupt at overflow. It could overflow within about 1/2 second. Over the
+course of that time, 25 to 30 comparator interrupts are expected. When the
+timer interrupt does occour, the LED is switched off. Comparator Interrupts are
+counted and at 15 the timer is reset and the LED is switched on.
 
 
  
