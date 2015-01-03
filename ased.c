@@ -51,7 +51,7 @@ int main(void)
   DDRB |= (1<<LED_RED_DD);
 
  /* turn the led off */
-  ledcntl(OFF); 
+  ledcntl(ON); 
 
  /* set up the timer */
   initTimerCounter1();
@@ -84,13 +84,13 @@ int main(void)
      if(!nowaves)
        {
         TCNT1 = TIMESTART;
-        ledcntl(OFF);
+        ledcntl(ON);
         f_sinewave = CLEAR;
        }
     }
    else if(f_overflow)
     {
-     ledcntl(ON); 
+     ledcntl(OFF); 
      nowaves = WAVETHRESHOLD; 
      f_overflow = CLEAR; //reset int flag
     }
