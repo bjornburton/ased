@@ -110,15 +110,6 @@ void ledcntl(char state)
 /* configure the timer interrupt */
 void initTimerCounter1(void)
 {
- /* General Timer/Counter Control Register we will leave default */
- //GTCCR = ;
- 
- /* Timer/Counter Control Register A we will leave default */
- //TCCR0A = ;
-
- /* Timer/Counter1 Control Register we will leave default */
- //TCCR1 = ;
-
  /* set a very long prescal of 16384 counts */
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
 
@@ -131,7 +122,6 @@ void initTimerCounter1(void)
 /* configure the comparator */
 void initComparator(void)
 {
-
  /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
  ADCSRB |= (1<<ACME);
 
@@ -149,7 +139,6 @@ void initComparator(void)
  
  /* Enable the analog comparator interrupt */
  ACSR |= (1<<ACIE);
-
 
 }
 
