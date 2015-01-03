@@ -36,7 +36,6 @@ Just for fun.
 
 
 /* Function Declarations */
-void delay(unsigned intervals);
 void ledcntl(char state);
 void initTimerCounter1(void); // sets up timer
 void initComparator(void); // sets up comparator
