@@ -46,7 +46,7 @@ volatile char f_sinewave = CLEAR;
 
 int main(void)
 {
-
+ static char nowaves = WAVETHRESHOLD; 
  /* set the led port direction */
   DDRB |= (1<<LED_RED_DD);
 
@@ -69,7 +69,6 @@ int main(void)
 
  for (;;) // forever
   {
-   static char nowaves = WAVETHRESHOLD; 
   /* now we wait in idle for any interrupt event */
   sleep_mode();
 
@@ -82,8 +81,8 @@ int main(void)
        {
         TCNT1 = TIMESTART;
         ledcntl(ON);
-        f_sinewave = CLEAR;
        }
+     f_sinewave = CLEAR;
     }
    else if(f_overflow)
     {
