@@ -12,6 +12,7 @@ Just for fun.
 # define F_CPU 8000000UL
 
 # include <avr/io.h> // need some port access
+# include <util/delay.h> // need to delay
 # include <avr/interrupt.h> // have need of an interrupt
 # include <avr/sleep.h> // have need of sleep
 # include <stdlib.h>
@@ -27,12 +28,12 @@ Just for fun.
 # define CLEAR 0
  /* Parameters */
 # define WAVETHRESHOLD 15 // wave count debounce; 15 waves is "good"
-/* don't take too long or time will run out */
+/* About 250 ms. Don't take too long or time will run out */
 
 # define TIMESTART 12     // preset for the timer counter
 /* Prescaler is set to clk/16484. 
 0.5 seconds *(8e6/16384) is 244.14.
-256-244 = 12, leaving 1/2 second to time-out */
+256-244 = 12, leaving 500 ms to time-out */
 
 
 /* Function Declarations */
@@ -46,7 +47,6 @@ volatile char f_sinewave = CLEAR;
 
 int main(void)
 {
- static char nowaves = WAVETHRESHOLD; 
  /* set the led port direction */
   DDRB |= (1<<LED_RED_DD);
 
@@ -69,6 +69,11 @@ int main(void)
 
  for (;;) // forever
   {
+   static char nowaves = WAVETHRESHOLD;
+      
+  _delay_us(100); // hold-off for 0.1 ms
+  f_overflow = CLEAR; //reset int flag
+  f_sinewave = CLEAR;
   /* now we wait in idle for any interrupt event */
   sleep_mode();
 
@@ -76,19 +81,18 @@ int main(void)
   /* some interrupt was detected! Let's see which one */
   if(f_sinewave) 
     {
-     nowaves = (nowaves)?nowaves-1:0; 
+     nowaves = (nowaves)?nowaves-1:0;
+     
      if(!nowaves)
        {
-        TCNT1 = TIMESTART;
         ledcntl(ON);
+        TCNT1 = TIMESTART;
        }
-     f_sinewave = CLEAR;
     }
-   else if(f_overflow)
+     else if(f_overflow)
     {
      ledcntl(OFF); 
      nowaves = WAVETHRESHOLD; 
-     f_overflow = CLEAR; //reset int flag
     }
   }  
 
