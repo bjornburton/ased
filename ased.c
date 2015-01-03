@@ -1,12 +1,14 @@
 /**************************************
 ASED
+Version 1.0.0
 Ancillary Service Electric Detector
 2015-01-01
 Bjorn Burton
 
 Just for fun.
 **************************************/
-// AVR clock frequency in Hz, used by util/delay.h
+
+/* AVR clock frequency in Hz, used by util/delay.h */
 # define F_CPU 8000000UL
 
 # include <avr/io.h> // need some port access
@@ -21,20 +23,27 @@ Just for fun.
  /* Bool*/
 # define ON 1
 # define OFF 0
-# define TRUE 1
-# define FALSE 0
+# define SET 1
+# define CLEAR 0
  /* Parameters */
-# define WAVETHRESHOLD 15
+# define WAVETHRESHOLD 15 // wave count debounce; 15 waves is "good"
+/* don't take too long or time will run out */
+
+# define TIMESTART 12     // preset for the timer counter
+/* Prescaler is set to clk/16484. 
+0.5 seconds *(8e6/16384) is 244.14.
+256-244 = 12, leaving 1/2 second to time-out */
+
 
 /* Function Declarations */
 void delay(unsigned intervals);
 void ledcntl(char state);
-void initTimerCounter1(void);
-void initComparator(void);
+void initTimerCounter1(void); // sets up timer
+void initComparator(void); // sets up comparator
 
 /* Global variables */
-volatile char overflow = 0; 
-volatile char sinewave = 0; 
+volatile char f_overflow = CLEAR; 
+volatile char f_sinewave = CLEAR; 
 
 int main(void)
 {
@@ -70,23 +79,21 @@ int main(void)
 
 
   /* some interrupt was detected! Let's see which one */
-  if(sinewave) 
+  if(f_sinewave) 
     {
      nowaves = (nowaves)?nowaves-1:0; 
      if(!nowaves)
        {
-        /* preset the counter at each interrupt. Prescaler is clk/16484.
-           0.5 *(8e6/16384) is 244.14. 256-244=12, so 12 is it */
-        TCNT1 = 12;
+        TCNT1 = TIMESTART;
         ledcntl(OFF);
-        sinewave = FALSE;
+        f_sinewave = CLEAR;
        }
     }
-   else if(overflow)
+   else if(f_overflow)
     {
      ledcntl(ON); 
      nowaves = WAVETHRESHOLD; 
-     overflow = FALSE; //reset int flag
+     f_overflow = CLEAR; //reset int flag
     }
   }  
 
@@ -116,7 +123,7 @@ void initTimerCounter1(void)
  /* set a very long prescal of 16384 counts */
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
 
- /* Timer/counter 1 overflow interupt enable */
+ /* Timer/counter 1 f_overflow interupt enable */
  TIMSK |= (1<<TOIE1);
 
 }
@@ -151,13 +158,13 @@ void initComparator(void)
 /* Timer ISR */
 ISR(TIMER1_OVF_vect)
 {
-  overflow = TRUE; 
+  f_overflow = SET; 
 }
 
 /* Comparator ISR */
 ISR(ANA_COMP_vect)
 {
- sinewave = TRUE;
+ f_sinewave = SET;
 }
 
 
