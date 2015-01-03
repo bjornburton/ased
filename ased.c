@@ -59,9 +59,6 @@ int main(void)
  /* set up the comparator */
    initComparator();
 
- /* set pull-up temprarily */
-  // PORTB |= (1<<PB1);
-
  /* Global Int Enable */
   sei();
 
