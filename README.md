@@ -2,9 +2,18 @@ ASED
 =========
 Ancillary Service Electric Detector
 
+*** Feature: Siren ***
+Adding an audible siren and reset. Siren function will arm after a 10 minute
+power-loss; that is, the Trinket is running for a full 10 minutes without
+seeing AC at pin #2.
+Once armed, siren will chirp for 100 ms at a 5 second interval, only while
+AC is present.
+It may be disarmed, stopping the chirp, by pressing a button or power-cycle.
+**********************
+  
 
-It's in C99 and so will compile using the gnu compiler, but also the
-Arduino IDE.
+It's in C99, and does not use Wiring. For this reason it will compile using the
+gnu compiler, arv-gcc along with avr-libc. It will also compile in the Arduino IDE as a "Sketch."
 
 What is does and Why:
 With an emergency generator connected through an interlocked load-center,

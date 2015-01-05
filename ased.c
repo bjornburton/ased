@@ -1,6 +1,6 @@
 /**************************************
 ASED
-Version 1.0.0
+Version 1.1.0
 Ancillary Service Electric Detector
 2015-01-01
 Bjorn Burton
@@ -8,56 +8,25 @@ Bjorn Burton
 Just for fun.
 **************************************/
 
-/* AVR clock frequency in Hz, used by util/delay.h */
-# define F_CPU 8000000UL
+# include "ased.h"
 
-# include <avr/io.h> // need some port access
-# include <util/delay.h> // need to delay
-# include <avr/interrupt.h> // have need of an interrupt
-# include <avr/sleep.h> // have need of sleep
-# include <stdlib.h>
-
-/**** Defines *****/
- /* LED port */
-# define LED_RED PORTB1
-# define LED_RED_DD DDB1
- /* Bool*/
-# define ON 1
-# define OFF 0
-# define SET 1
-# define CLEAR 0
- /* Parameters */
-# define WAVETHRESHOLD 15 // wave count debounce; 15 waves is "good"
-/* About 250 ms. Don't take too long or time will run out */
-
-# define TIMESTART 12     // preset for the timer counter
-/* Prescaler is set to clk/16484. 
-0.5 seconds *(8e6/16384) is 244.14.
-256-244 = 12, leaving 500 ms to time-out */
-
-
-/* Function Declarations */
-void ledcntl(char state);
-void initTimerCounter1(void); // sets up timer
-void initComparator(void); // sets up comparator
-
-/* Global variables */
-volatile char f_overflow = CLEAR; 
-volatile char f_sinewave = CLEAR; 
 
 int main(void)
 {
  /* set the led port direction */
   DDRB |= (1<<LED_RED_DD);
 
- /* turn the led off */
+ /* set the siren port direction */
+  DDRB |= (1<<SIREN_DD);
+
+ /* turn the led on */
   ledcntl(ON); 
 
- /* set up the timer */
-  initTimerCounter1();
+ /* set up the nowave timer */
+  initnowavetimer();
 
- /* set up the comparator */
-   initComparator();
+ /* set up the wave-event comparator */
+  initwavedetector();
 
  /* Global Int Enable */
   sei();
@@ -69,34 +38,66 @@ int main(void)
 
  for (;;) // forever
   {
-   static char nowaves = WAVETHRESHOLD;
+   static unsigned char nowaves = WAVETHRESHOLD;
+   static unsigned int armwait = ARMTHRESHOLD;  
       
-  _delay_us(100); // hold-off for 0.1 ms
-  f_overflow = CLEAR; //reset int flag
-  f_sinewave = CLEAR;
+  /* hold-off to minimise noise susceptibilty */  
+  waveholdoff(); 
+
   /* now we wait in idle for any interrupt event */
   sleep_mode();
 
-
   /* some interrupt was detected! Let's see which one */
-  if(f_sinewave) 
+  if(f_state & (1<<WAVES)) 
     {
      nowaves = (nowaves)?nowaves-1:0;
-     
-     if(!nowaves)
+
+     if(!nowaves) // ancilliary electric service restored
        {
         ledcntl(ON);
-        TCNT1 = TIMESTART;
+
+        if(f_state & (1<<ARM))
+           chirp(ON);
+ 
+        TCNT1 = TIMESTART;  // reset the timer
        }
-    }
-     else if(f_overflow)
-    {
-     ledcntl(OFF); 
-     nowaves = WAVETHRESHOLD; 
-    }
+
+     f_state &= ~(1<<WAVES); //reset int flag
+    
+     }
+     else if(f_state & (1<<NOWAVES))
+         {
+          ledcntl(OFF); 
+          nowaves = WAVETHRESHOLD; 
+
+          chirp(OFF);  // ASE dropped, stop alarm chirp
+          
+          armwait = (armwait)?armwait-1:0;
+
+          if(!armwait && ~f_state & (1<<ARM) )
+              f_state |= (1<<ARM);
+     /* at this time the only way to disarm is a power cycle */
+
+          f_state &= ~(1<<NOWAVES); //reset int flag
+          }
   }  
 
 return 0; // it's the right thing to do!
+}
+
+
+/* Alarm Pulsing function */
+void chirp(char state)
+{
+static unsigned char count = CHIRPLENGTH;
+
+ count = (count)?count-1:CHIRPPERIOD;
+ 
+ if(count < CHIRPLENGTH)
+    sirencntl(ON);
+  else
+    sirencntl(OFF);
+
 }
 
 
@@ -106,9 +107,15 @@ void ledcntl(char state)
   PORTB = state ? PORTB | (1<<LED_RED) : PORTB & ~(1<<LED_RED);
 }
 
+/* simple siren control */
+void sirencntl(char state)
+{
+  PORTB = state ? PORTB | (1<<SIREN) : PORTB & ~(1<<SIREN);
+}
 
-/* configure the timer interrupt */
-void initTimerCounter1(void)
+
+/* configure the no-wave timer */
+void initnowavetimer(void)
 {
  /* set a very long prescal of 16384 counts */
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
@@ -119,8 +126,8 @@ void initTimerCounter1(void)
 }
 
 
-/* configure the comparator */
-void initComparator(void)
+/* configure the the wave detection comparator */
+void initwavedetector(void)
 {
  /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
  ADCSRB |= (1<<ACME);
@@ -142,17 +149,31 @@ void initComparator(void)
 
 }
 
+/* Wave detection Hold-Off or debounce */
+void waveholdoff()
+{
+ /* Disable the analog comparator interrupt */
+ ACSR &= ~(1<<ACIE);
+
+ _delay_us(WAVEHOLDOFFTIME);
+ 
+ /* Enable the analog comparator interrupt */
+ ACSR |= (1<<ACIE);
+
+}
+
+
 
 /* Timer ISR */
 ISR(TIMER1_OVF_vect)
 {
-  f_overflow = SET; 
+  f_state |= (1<<NOWAVES); 
 }
 
 /* Comparator ISR */
 ISR(ANA_COMP_vect)
 {
- f_sinewave = SET;
+ f_state |= (1<<WAVES);
 }
 
 
