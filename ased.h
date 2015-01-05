@@ -50,7 +50,7 @@ Just for fun.
 # define WAVEHOLDOFFTIME 100 // Range to 255
 /* hold-off time in us for wave detection */
 
-# define ARMTHRESHOLD 60 // Range to 65535
+# define ARMTHRESHOLD 1200 // Range to 65535
 /* alarm arm delay in nowave counts*/
 
 /* chirp parameters for alarm */
