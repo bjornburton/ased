@@ -18,8 +18,12 @@ Just for fun.
 # include <stdlib.h>
 
 /**** Defines *****/
+ /* clear-button port */
+# define ARMCLEAR PORTB3 // Trinket's LED and pin #3
+# define ARMCLEAR_DD DDB3
+
  /* LED port */
-# define LED_RED PORTB1  // Trinket's LED and pin #2
+# define LED_RED PORTB1  // Trinket's LED and pin #1
 # define LED_RED_DD DDB1
 
  /* siren port */
