@@ -93,10 +93,10 @@ static unsigned char count = CHIRPLENGTH;
 
  count = (count)?count-1:CHIRPPERIOD;
  
- if(count < CHIRPLENGTH)
-    sirencntl(ON);
-  else
+ if(count > CHIRPLENGTH || state == OFF)
     sirencntl(OFF);
+  else
+    sirencntl(ON);
 
 }
 
