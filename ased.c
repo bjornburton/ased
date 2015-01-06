@@ -19,6 +19,13 @@ int main(void)
  /* set the siren port direction */
   DDRB |= (1<<SIREN_DD);
 
+ /* enable pin change interrupt for clear-button*/
+  PCMSK |= (1<<PCINT3);
+
+ /* General interrupt Mask register for clear-button*/
+  GIMSK |= (1<<PCIE);
+
+
  /* turn the led on */
   ledcntl(ON); 
 
@@ -174,6 +181,13 @@ ISR(TIMER1_OVF_vect)
 ISR(ANA_COMP_vect)
 {
  f_state |= (1<<WAVES);
+}
+
+/* Clear Button ISR */
+ISR(PCINT0_vect)
+{
+ if(PORTB & (1<<ARMCLEAR))
+    f_state &= ~(1<<ARM);
 }
 
 
