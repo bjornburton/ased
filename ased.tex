@@ -1,4 +1,5 @@
 \input cwebmac
+
 % ased
 
 \nocon % omit table of contents
@@ -65,22 +66,58 @@ a red LED on-board.
 
 \M{3}Here's the code
 
-\Y\B\X4:Header files to include\X\par
+\Y\B\C{ AVR clock frequency in Hz, used by util/delay.h }\6
+\8\#\&{define} \.{F\_CPU} \5\T{8000000\$U\$L}\C{*** Defines ****}\C{
+clear-button port }\6
+\8\#\&{define} \.{ARMCLEAR} \5\.{PORTB3}\SHC{ Trinket's LED and pin \#3 }\6
+\8\#\&{define} \.{ARMCLEAR\_DD} \5\.{DDB3}\C{ LED port }\6
+\8\#\&{define} \.{LED\_RED} \5\.{PORTB1}\SHC{ Trinket's LED and pin \#1 }\6
+\8\#\&{define} \.{LED\_RED\_DD} \5\.{DDB1}\C{ siren port }\6
+\8\#\&{define} \.{SIREN} \5\.{PORTB0}\SHC{ Trinket's LED and pin \#0 }\6
+\8\#\&{define} \.{SIREN\_DD} \5\.{DDB0}\C{ Bool}\6
+\8\#\&{define} \.{ON} \5\T{1}\6
+\8\#\&{define} \.{OFF} \5\T{0}\6
+\8\#\&{define} \.{SET} \5\T{1}\6
+\8\#\&{define} \.{CLEAR} \5\T{0}\C{ Flags for f\_state }\6
+\8\#\&{define} \.{NOWAVES} \5\T{2}\SHC{ no ASE detected for some time }\6
+\8\#\&{define} \.{WAVES} \5\T{1}\SHC{ ASE detected }\6
+\8\#\&{define} \.{ARM} \5\T{0}\SHC{ ARM for Alarm }\C{ Parameters }\6
+\8\#\&{define} \.{WAVETHRESHOLD} \5\T{15}\C{ Number of wave before considering
+the service on. Range to 255 }\C{ About 250 ms. Don't take too long or time
+will run out }\6
+\8\#\&{define} \.{TIMESTART} \5\T{12}\SHC{ preset for the timer counter. Range
+to 255 */ }\C{ Prescaler is set to clk/16484. 0.5 seconds *(8e6/16384) is
+244.14. 256-244 = 12, leaving 500 ms to time-out }\6
+\8\#\&{define} \.{WAVEHOLDOFFTIME} \5\T{100}\SHC{ Range to 255 }\C{ hold-off
+time in us for wave detection }\6
+\8\#\&{define} \.{ARMTHRESHOLD} \5\T{1200}\SHC{ Range to 65535 }\C{ alarm arm
+delay in nowave counts}\C{ chirp parameters for alarm }\6
+\8\#\&{define} \.{CHIRPLENGTH} \5\T{7}\SHC{ number of waves long }\6
+\8\#\&{define} \.{CHIRPPERIOD} \5\T{200}\SHC{ number of waves long }\C{
+Function Declarations }\6
+\&{void} \\{ledcntl}(\&{char} \\{state});\6
+\&{void} \\{sirencntl}(\&{char} \\{state});\SHC{alarm siren control }\6
+\&{void} \\{chirp}(\&{char} \\{state});\SHC{ alarm siren modulation }\6
+\&{void} \\{initnowavetimer}(\&{void});\SHC{ sets up timer }\6
+\&{void} \\{initwavedetector}(\&{void});\SHC{ sets up comparator }\6
+\&{void} \\{waveholdoff}(\&{void});\SHC{ for noise resistance...debounce }\C{
+Global variables }\6
+\&{volatile} \&{unsigned} \&{char} \\{f\_state}${}\K\T{\^00};$ \X4:Header files
+to include\X\par
 \fi
 
-\M{4}hmm
+\M{4}\PB{\.{ASED}} Version 1.1.0r\\*
+Ancillary Service Electric Detector\\*
+Bjorn Burton\\*
+Just for fun.\\*
 
-/**************************************
-ASED
-Version 1.1.0r
-Ancillary Service Electric Detector
-2015-01-01
-Bjorn Burton
 
-Just for fun.
-**************************************/
 \Y\B\4\X4:Header files to include\X${}\E{}$\6
-\8\#\&{include} \.{"ased.h"}\par
+\8\#\&{include} \.{<avr/io.h>}\SHC{ need some port access }\6
+\8\#\&{include} \.{<util/delay.h>}\SHC{ need to delay }\6
+\8\#\&{include} \.{<avr/interrupt.h>}\SHC{ have need of an interrupt }\6
+\8\#\&{include} \.{<avr/sleep.h>}\SHC{ have need of sleep }\6
+\8\#\&{include} \.{<stdlib.h>}\par
 \U3.\fi
 
 \M{5}At the beginning the I/O is configured.

@@ -1,21 +1,84 @@
 /*3:*/
-#line 41 "./ased.w"
+#line 48 "./ased.w"
+
+
+#define F_CPU 8000000UL
 
 
 
 
 
+# define ARMCLEAR PORTB3 
+# define ARMCLEAR_DD DDB3
+
+
+# define LED_RED PORTB1  
+# define LED_RED_DD DDB1
+
+
+# define SIREN PORTB0 
+# define SIREN_DD DDB0
+
+
+# define ON 1
+# define OFF 0
+# define SET 1
+# define CLEAR 0
+
+
+# define NOWAVES 2 
+# define WAVES   1 
+# define ARM     0 
+
+
+# define WAVETHRESHOLD 15
+
+
+
+# define TIMESTART 12     
 
 
 
 
+# define WAVEHOLDOFFTIME 100 
+
+
+# define ARMTHRESHOLD 1200 
 
 
 
-# include "ased.h"
+# define CHIRPLENGTH 7 
+# define CHIRPPERIOD 200 
 
-/*:3*//*4:*/
-#line 56 "./ased.w"
+
+
+void ledcntl(char state);
+void sirencntl(char state);
+void chirp(char state);
+void initnowavetimer(void);
+void initwavedetector(void);
+void waveholdoff(void);
+
+
+
+volatile unsigned char f_state= 0x00;
+
+/*4:*/
+#line 119 "./ased.w"
+
+# include <avr/io.h>  
+# include <util/delay.h>  
+# include <avr/interrupt.h>  
+# include <avr/sleep.h>  
+# include <stdlib.h> 
+
+
+/*:4*/
+#line 111 "./ased.w"
+
+
+/*:3*//*5:*/
+#line 128 "./ased.w"
 
 int main(void)
 {
@@ -31,33 +94,33 @@ PCMSK|= (1<<PCINT3);
 
 GIMSK|= (1<<PCIE);
 
-/*:4*//*5:*/
-#line 73 "./ased.w"
+/*:5*//*6:*/
+#line 145 "./ased.w"
 
 
 ledcntl(ON);
 
-/*:5*//*6:*/
-#line 78 "./ased.w"
+/*:6*//*7:*/
+#line 150 "./ased.w"
 
 
 initnowavetimer();
 
-/*:6*//*8:*/
-#line 91 "./ased.w"
+/*:7*//*9:*/
+#line 163 "./ased.w"
 
 
 sei();
-/*:8*//*9:*/
-#line 97 "./ased.w"
+/*:9*//*10:*/
+#line 169 "./ased.w"
 
 
 
 MCUCR&= ~(1<<SM1);
 MCUCR&= ~(1<<SM0);
 
-/*:9*//*10:*/
-#line 105 "./ased.w"
+/*:10*//*11:*/
+#line 177 "./ased.w"
 
 for(;;)
 {
@@ -108,8 +171,8 @@ f_state&= ~(1<<NOWAVES);
 return 0;
 }
 
-/*:10*//*11:*/
-#line 161 "./ased.w"
+/*:11*//*12:*/
+#line 233 "./ased.w"
 
 
 void chirp(char state)
@@ -155,8 +218,8 @@ TIMSK|= (1<<TOIE1);
 
 void initwavedetector(void)
 {
-/*:11*//*12:*/
-#line 214 "./ased.w"
+/*:12*//*13:*/
+#line 286 "./ased.w"
 
 
 ADCSRB|= (1<<ACME);
@@ -164,32 +227,32 @@ ADCSRB|= (1<<ACME);
 
 ADMUX|= (1<<MUX0);
 
-/*:12*//*13:*/
-#line 224 "./ased.w"
+/*:13*//*14:*/
+#line 296 "./ased.w"
 
 
 DIDR0|= ((1<<AIN1D)|(1<<AIN0D));
-/*:13*//*14:*/
-#line 231 "./ased.w"
+/*:14*//*15:*/
+#line 303 "./ased.w"
 
 
 ACSR|= (1<<ACBG);
 
-/*:14*//*15:*/
-#line 238 "./ased.w"
+/*:15*//*16:*/
+#line 310 "./ased.w"
 
 
 ACSR|= (1<<ACIS1);
-/*:15*//*16:*/
-#line 243 "./ased.w"
+/*:16*//*17:*/
+#line 315 "./ased.w"
 
 
 ACSR|= (1<<ACIE);
 
 }
 
-/*:16*//*17:*/
-#line 256 "./ased.w"
+/*:17*//*18:*/
+#line 328 "./ased.w"
 
 
 void waveholdoff()
@@ -212,8 +275,8 @@ ISR(TIMER1_OVF_vect)
 f_state|= (1<<NOWAVES);
 }
 
-/*:17*//*18:*/
-#line 282 "./ased.w"
+/*:18*//*19:*/
+#line 354 "./ased.w"
 
 
 ISR(ANA_COMP_vect)
@@ -228,4 +291,4 @@ if(PORTB&(1<<ARMCLEAR))
 f_state&= ~(1<<ARM);
 }
 
-/*:18*/
+/*:19*/
