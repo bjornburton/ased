@@ -1,18 +1,24 @@
-@ 
-With an emergency generator connected through an interlocked load-center, it's hard to tell when the Ancillary Service has been restored. Switching back to Main shuts everything down.
-The obvious method is to measure the voltage at the main-breaker's input.
+% ased
+
+\nocon % omit table of contents
+\datethis % print date on listing
+
+
+
+@* ASED.
+With an emergency generator connected through an interlocked load-center, it's hard to tell when the |Ancillary Service| has been restored. Switching back to Main requiers shutting  everything down for a moment.
+It would be good to know if main is live before swicking back. The obvious method is to measure the voltage at the main-breaker's input.
 The safety concern is that it's not breaker-protected making for a massive fault-current,
 should insulation be breached or the circuit shorted.
-Also, installation is somewhat involved, having to tap into live lines and providing some form of isolation.
+Also, installation of a simple meter is somewhat involved, having to tap into live lines and, idealy, providing some form of isolation.
 
-The obvious solution is to have a high-impedance connection.
-A small capacitance will do.
-Simple capacitive coupling can be had with a ``gimmick''; a technique used since the
-1920s.
+The obvious solution is to have a high-impedance connection very near to the source. 
+A small capacitance would do.
+Simple capacitive coupling can be had with a ``gimmick''; a technique used since the 1920s.
 This may be several turns of THHN around the large-gage insulated incomming line.
 Since the voltage is with respect to neutral, and neutral is bonded to ground,
 just the one wire is needed.
-No need to mess with conductors, just coupling to the electric field through the insulator.
+No need to mess with live conductors, just coupling to the electric field through the insulation already present. Installation still has some risk, but much less.
 
 With this signal, a circuit and be built to detect the difference between having AC and having no AC,
 and provide a signal to indicate that state.
@@ -39,6 +45,8 @@ a red LED on-board.
 @ Here's the code
 
 @c
+@<Header files to include@>@/
+@ hmm
 
 /**************************************
 ASED
@@ -49,8 +57,8 @@ Bjorn Burton
 
 Just for fun.
 **************************************/
-
-# include "ased.h"
+@<Header files...@>=
+#include "ased.h"
 
 @ At the beginning the I/O is configured.
 @c

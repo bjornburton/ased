@@ -1,27 +1,36 @@
 \input cwebmac
+% ased
 
-\M{1}
+\nocon % omit table of contents
+\datethis % print date on listing
+
+
+
+
+\N{1}{1}ASED.
 With an emergency generator connected through an interlocked load-center, it's
-hard to tell when the Ancillary Service has been restored. Switching back to
-Main shuts everything down.
-The obvious method is to measure the voltage at the main-breaker's input.
+hard to tell when the \PB{\\{Ancillary}\\{Service}} has been restored.
+Switching back to Main requiers shutting  everything down for a moment.
+It would be good to know if main is live before swicking back. The obvious
+method is to measure the voltage at the main-breaker's input.
 The safety concern is that it's not breaker-protected making for a massive
 fault-current,
 should insulation be breached or the circuit shorted.
-Also, installation is somewhat involved, having to tap into live lines and
-providing some form of isolation.
+Also, installation of a simple meter is somewhat involved, having to tap into
+live lines and, idealy, providing some form of isolation.
 
-The obvious solution is to have a high-impedance connection.
-A small capacitance will do.
+The obvious solution is to have a high-impedance connection very near to the
+source.
+A small capacitance would do.
 Simple capacitive coupling can be had with a ``gimmick''; a technique used
-since the
-1920s.
+since the 1920s.
 This may be several turns of THHN around the large-gage insulated incomming
 line.
 Since the voltage is with respect to neutral, and neutral is bonded to ground,
 just the one wire is needed.
-No need to mess with conductors, just coupling to the electric field through
-the insulator.
+No need to mess with live conductors, just coupling to the electric field
+through the insulation already present. Installation still has some risk, but
+much less.
 
 With this signal, a circuit and be built to detect the difference between
 having AC and having no AC,
@@ -56,13 +65,25 @@ a red LED on-board.
 
 \M{3}Here's the code
 
-\Y\B\C{************************************* ASED Version 1.1.0r Ancillary
-Service Electric Detector 2015-01-01 Bjorn Burton  Just for fun.
-*************************************}\6
-\8\#\&{include} \.{"ased.h"}\par
+\Y\B\X4:Header files to include\X\par
 \fi
 
-\M{4}At the beginning the I/O is configured.
+\M{4}hmm
+
+/**************************************
+ASED
+Version 1.1.0r
+Ancillary Service Electric Detector
+2015-01-01
+Bjorn Burton
+
+Just for fun.
+**************************************/
+\Y\B\4\X4:Header files to include\X${}\E{}$\6
+\8\#\&{include} \.{"ased.h"}\par
+\U3.\fi
+
+\M{5}At the beginning the I/O is configured.
 \Y\B\&{int} \\{main}(\&{void})\1\1 $\{{}$\C{ set the led port direction }\6
 $\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{LED\_RED\_DD}){}$;\C{ set the siren port
 direction }\6
@@ -73,18 +94,18 @@ register for clear-button}\6
 ${}\.{GIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCIE}){}$;\par
 \fi
 
-\M{5}The LED is set ''assuming'' that there will be an AC signal.
+\M{6}The LED is set ''assuming'' that there will be an AC signal.
 
 \Y\B\C{ turn the led on }\6
 \\{ledcntl}(\.{ON});\par
 \fi
 
-\M{6}Here the timer and comparator are setup.
+\M{7}Here the timer and comparator are setup.
 \Y\B\C{ set up the nowave timer }\6
 \\{initnowavetimer}(\,);\par
 \fi
 
-\M{7}
+\M{8}
 The Trinket runs at a speedy 8 MHz so the slow 60 Hz signal is no issue.
 One could use the ADC but that doesn't make too much sense as the input may
 spend a lot of time cliped.
@@ -94,14 +115,14 @@ initwavedetector();
 
 \fi
 
-\M{8}Of course, any interrupt function requires that bit I "Global Interrupt
+\M{9}Of course, any interrupt function requires that bit I "Global Interrupt
 Enable"
 is set; usualy done through calling sei().
 \Y\B\C{ Global Int Enable }\6
 \\{sei}(\,);\par
 \fi
 
-\M{9}
+\M{10}
 Rather than burning loops, waiting for something to happen for 16 ms, the sleep
 mode can be used.
 Interrupts are used to wake it.
@@ -111,7 +132,7 @@ and comparator to continue during sleep. }\6
 ${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM0}){}$;\par
 \fi
 
-\M{10}
+\M{11}
 This is the loop that does the work.
 \Y\B\&{for} ( ;  ; \,)\SHC{ forever }\6
 ${}\{{}$\1\6
@@ -148,7 +169,7 @@ ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{NOWAVES}){}$;\SHC{reset int flag }\6
 $\}{}$\par
 \fi
 
-\M{11}
+\M{12}
 Siren function will arm after a 10 minute power-loss; that is,
 the Trinket is running for a full 10 minutes without seeing AC at pin \#2.
 Once armed, siren will chirp for 100 ms at a 5 second interval,
@@ -183,7 +204,7 @@ ${}\.{TIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{TOIE1});{}$\6
 \&{void} \\{initwavedetector}(\&{void})\1\1 $\{{}$\par
 \fi
 
-\M{12}
+\M{13}
 The ideal input AN1, PB1, is connected to the LED in the Trinket!
 That's not a big issue since the ADC's MUX may be used.
 That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are
@@ -199,14 +220,14 @@ bit MUX0 of register ADMUX }\6
 ${}\.{ADMUX}\MRL{{\OR}{\K}}(\T{1}\LL\.{MUX0}){}$;\par
 \fi
 
-\M{13}Disable digital input buffers at AIN[1:0] to save power. This is done by
+\M{14}Disable digital input buffers at AIN[1:0] to save power. This is done by
 setting AIN1D and AIN0D in register DIDR0.
 
 \Y\B\C{ Disable digital inputs to save power }\6
 \.{DIDR0}${}\MRL{{\OR}{\K}}((\T{1}\LL\.{AIN1D})\OR(\T{1}\LL\.{AIN0D})){}$;\par
 \fi
 
-\M{14}
+\M{15}
 Both comparator inputs have pins but AIN0 can be connected to a reference of
 1.1 VDC, leaving the negative input to the signal. The ref is selected by
 setting bit ACBG of register ACSR.
@@ -214,7 +235,7 @@ setting bit ACBG of register ACSR.
 \.{ACSR}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACBG}){}$;\par
 \fi
 
-\M{15}
+\M{16}
 It can be configured to trigger on rising, falling or toggle (default) by
 clearing/setting bits ACIS[1:0] also on register ACSR.
 There is no need for toggle, and falling is selected by simply setting ACIS1.
@@ -222,13 +243,13 @@ There is no need for toggle, and falling is selected by simply setting ACIS1.
 \.{ACSR}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIS1}){}$;\par
 \fi
 
-\M{16}
+\M{17}
 To enable this interrupt, set the ACIE bit of register ACSR.
 \Y\B\C{ Enable the analog comparator interrupt }\6
 \.{ACSR}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});$ $\}{}$\par
 \fi
 
-\M{17}
+\M{18}
 A timer is needed to to encompase some number of waves so it can clearly
 discern on from off.
 The timer is also interrupt based. The timer is set to interrupt at overflow.
@@ -251,7 +272,7 @@ ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{NOWAVES});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}
+\M{19}
 The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
 register but the vector ANA\_COMP\_vect is the simpler way.
 
@@ -270,4 +291,4 @@ ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ARM});{}$\2\6
 
 \inx
 \fin
-\end
+\con
