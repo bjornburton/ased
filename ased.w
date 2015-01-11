@@ -43,10 +43,15 @@ $100e6 {170 \over  {(2pi*60*1e-12)^{-1} + 100e6)} } = 6.16 $ volts peak, ignorin
 input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
+
+In use, the AC signal goes to the pin  marked ``\#2'' on the Trinket. 
+The LED port is marked ``\#1''.
+The Siren port is marked ``\#0''.
+Clear, should it be implemented, is on ``\#3''.
+
 @d F_CPU 8000000UL
 
-
-@d ARMCLEAR PORTB3 // Trinket's LED and pin \#3
+@d ARMCLEAR PORTB3 // Trinket's Clear is  pin \#3
 @d ARMCLEAR_DD DDB3
 
   /* Boolean */
@@ -85,9 +90,8 @@ a red LED on-board.
 @d LED_RED_DD DDB1
 
  /* siren port */
-@d SIREN PORTB0 // Trinket's LED and pin \#0
+@d SIREN PORTB0 // Trinket's Siren and pin \#0
 @d SIREN_DD DDB0
-
 
 
 @c
@@ -107,9 +111,13 @@ The f\_state global variable needs the type qualifier `volatile' or optimization
 f\_state is just a simple bit-flag that keeps track what has been handled. 
 
 @<Global var...@>=
-volatile unsigned char f_state = 0x00; 
-@
+volatile unsigned char f_state = 0; 
 
+
+
+@
+Atmel pins default as simple inputs so they need to be configured to use them for output.
+Additionaly, we need the clear button to wake the device through an interrupt.
 @c
 @< Prototypes @>@;
 @< Global variables @>@;
@@ -117,19 +125,17 @@ volatile unsigned char f_state = 0x00;
 int main(void)
 {
 
-@
-Pins default as simple inputs so they need to be confugured to use them for output.
-Additionaly, we need the clear button to wake the device through an interrupt.
-@c
 @<Initialize pin outputs and inputs@>
 
-@ The LED is set, meaning `on', assuming that there is an AC signal.
+@
+The LED is set, meaning `on', assuming that there is an AC signal.
 The thought is that it's better to say that there is AC, when there isn't, as opposed to the converse.
 @c
  /* turn the led on */
   ledcntl(ON); 
 
-@ Here the timer and comparator are setup.
+@
+Here is the timer and comparator are setup.
 @c
  /* set up the nowave timer */
   @<Initialize the no-wave timer@>
@@ -144,7 +150,8 @@ The inbuilt comparator seems like the right choice, for now.
  /* set up the wave-event comparator */
  @<Initialize the wave detection@>
 
-@ Of course, any interrupt function requires that bit ``Global Interrupt Enable''
+@
+Of course, any interrupt function requires that bit ``Global Interrupt Enable''
 is set; usualy done through calling sei().
 @c
  /* Global Int Enable */
@@ -166,11 +173,13 @@ The ISRs alter the bits in |f_state|.
    static unsigned char nowaves = WAVETHRESHOLD;
    static unsigned int armwait = ARMTHRESHOLD;  
       
-@  now we wait in idle for any interrupt event
+@
+Now we wait in idle for any interrupt event
 @c 
   sleep_mode();
 
-@ Some interrupt has been  detected! Let's see which one
+@
+Some interrupt has been  detected! Let's see which one
 @c
   if(f_state & (1<<WAVES)) 
     {
@@ -282,7 +291,7 @@ Comparator Interrupts are counted and at 15 the timer is reset and the LED is sw
 
 
 @
-The ideal input AN1, PB1, is connected to the LED in the Trinket!
+The ideal input AN1 (PB1), is connected to the LED in the Trinket!
 That's not a big issue since the ADC's MUX may be used.
 That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are available.
 Since PB3 and PB4 are use for USB, PB2 makes sense here.
@@ -342,6 +351,8 @@ Idle allows the counters and comparator to continue during sleep.
 }
 
 @
+This is the ISR for the main timer.
+When this overflows it generaly means the ASE has been off for a while. 
 @c
 /* Timer ISR */
 ISR(TIMER1_OVF_vect)
@@ -361,6 +372,10 @@ ISR(ANA_COMP_vect)
  f_state |= (1<<WAVES);
 }
 
+
+@
+This ISR responds to the Clear button.
+@c
 /* Clear Button ISR */
 ISR(PCINT0_vect)
 {

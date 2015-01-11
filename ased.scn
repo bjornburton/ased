@@ -1,3 +1,15 @@
-\I\X4:Header files to include\X
-\U3.
+\I\X17:Configure to wake upon interrupt\X
+\U9.
+\I\X3:Global variables\X
+\U4.
+\I\X18:Hold-off all interrupts\X
+\U12.
+\I\X13:Initialize pin outputs and inputs\X
+\U4.
+\I\X15:Initialize the no-wave timer\X
+\U6.
+\I\X16:Initialize the wave detection\X
+\U7.
+\I\X2:Prototypes\X
+\U4.
 

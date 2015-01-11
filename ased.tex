@@ -6,9 +6,11 @@
 \datethis % print date on listing
 
 
+\M{1}
+ASED Version 1.1.0r
+Ancillary Service Electric Detector
+Bjorn Burton
 
-
-\N{1}{1}ASED.
 With an emergency generator connected through an interlocked load-center, it's
 hard to tell when the \PB{\\{Ancillary}\\{Service}} has been restored.
 Switching back to Main requiers shutting  everything down for a moment.
@@ -49,9 +51,6 @@ The circuit would need a reference to ground to compare to.
 The input may need a bit of protection from line transients, which could pass
 trough the gimmick.
 
-\fi
-
-\M{2}
 I had seven Ada Fruit Trinkets just laying around. They use the Atmel
 ATTINY85 processor. The analog inputs are about 100~M$\Omega$. Not great, but
 I think it should be good enough. If we can muster 1~pf of gimmick, we will
@@ -62,158 +61,198 @@ input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
 
-\fi
+In use, the AC signal goes to the pin  marked ``\#2'' on the Trinket.
+The LED port is marked ``\#1''.
+The Siren port is marked ``\#0''.
+Clear, should it be implemented, is on ``\#3''.
 
-\M{3}Here's the code
-
-\Y\B\C{ AVR clock frequency in Hz, used by util/delay.h }\6
-\8\#\&{define} \.{F\_CPU} \5\T{8000000\$U\$L}\C{*** Defines ****}\C{
-clear-button port }\6
-\8\#\&{define} \.{ARMCLEAR} \5\.{PORTB3}\SHC{ Trinket's LED and pin \#3 }\6
-\8\#\&{define} \.{ARMCLEAR\_DD} \5\.{DDB3}\C{ LED port }\6
-\8\#\&{define} \.{LED\_RED} \5\.{PORTB1}\SHC{ Trinket's LED and pin \#1 }\6
-\8\#\&{define} \.{LED\_RED\_DD} \5\.{DDB1}\C{ siren port }\6
-\8\#\&{define} \.{SIREN} \5\.{PORTB0}\SHC{ Trinket's LED and pin \#0 }\6
-\8\#\&{define} \.{SIREN\_DD} \5\.{DDB0}\C{ Bool}\6
-\8\#\&{define} \.{ON} \5\T{1}\6
-\8\#\&{define} \.{OFF} \5\T{0}\6
-\8\#\&{define} \.{SET} \5\T{1}\6
-\8\#\&{define} \.{CLEAR} \5\T{0}\C{ Flags for f\_state }\6
-\8\#\&{define} \.{NOWAVES} \5\T{2}\SHC{ no ASE detected for some time }\6
-\8\#\&{define} \.{WAVES} \5\T{1}\SHC{ ASE detected }\6
-\8\#\&{define} \.{ARM} \5\T{0}\SHC{ ARM for Alarm }\C{ Parameters }\6
-\8\#\&{define} \.{WAVETHRESHOLD} \5\T{15}\C{ Number of wave before considering
-the service on. Range to 255 }\C{ About 250 ms. Don't take too long or time
-will run out }\6
-\8\#\&{define} \.{TIMESTART} \5\T{12}\SHC{ preset for the timer counter. Range
-to 255 */ }\C{ Prescaler is set to clk/16484. 0.5 seconds *(8e6/16384) is
-244.14. 256-244 = 12, leaving 500 ms to time-out }\6
-\8\#\&{define} \.{WAVEHOLDOFFTIME} \5\T{100}\SHC{ Range to 255 }\C{ hold-off
-time in us for wave detection }\6
-\8\#\&{define} \.{ARMTHRESHOLD} \5\T{1200}\SHC{ Range to 65535 }\C{ alarm arm
-delay in nowave counts}\C{ chirp parameters for alarm }\6
-\8\#\&{define} \.{CHIRPLENGTH} \5\T{7}\SHC{ number of waves long }\6
-\8\#\&{define} \.{CHIRPPERIOD} \5\T{200}\SHC{ number of waves long }\C{
-Function Declarations }\6
-\&{void} \\{ledcntl}(\&{char} \\{state});\6
-\&{void} \\{sirencntl}(\&{char} \\{state});\SHC{alarm siren control }\6
-\&{void} \\{chirp}(\&{char} \\{state});\SHC{ alarm siren modulation }\6
-\&{void} \\{initnowavetimer}(\&{void});\SHC{ sets up timer }\6
-\&{void} \\{initwavedetector}(\&{void});\SHC{ sets up comparator }\6
-\&{void} \\{waveholdoff}(\&{void});\SHC{ for noise resistance...debounce }\C{
-Global variables }\6
-\&{volatile} \&{unsigned} \&{char} \\{f\_state}${}\K\T{\^00};$ \X4:Header files
-to include\X\par
-\fi
-
-\M{4}\PB{\.{ASED}} Version 1.1.0r\\*
-Ancillary Service Electric Detector\\*
-Bjorn Burton\\*
-Just for fun.\\*
-
-
-\Y\B\4\X4:Header files to include\X${}\E{}$\6
-\8\#\&{include} \.{<avr/io.h>}\SHC{ need some port access }\6
+\Y\B\4\D$\.{F\_CPU}$ \5
+\T{8000000\$U\$L}\par
+\B\4\D$\.{ARMCLEAR}$ \5
+\.{PORTB3}\SHC{ Trinket's Clear is  pin \#3 }\par
+\B\4\D$\.{ARMCLEAR\_DD}$ \5
+\.{DDB3}\C{ Boolean }\par
+\B\4\D$\.{ON}$ \5
+\T{1}\par
+\B\4\D$\.{OFF}$ \5
+\T{0}\par
+\B\4\D$\.{SET}$ \5
+\T{1}\par
+\B\4\D$\.{CLEAR}$ \5
+\T{0}\C{ Flags for f\_state }\par
+\B\4\D$\.{NOWAVES}$ \5
+\T{2}\SHC{ no ASE detected for some time }\par
+\B\4\D$\.{WAVES}$ \5
+\T{1}\SHC{ ASE detected }\par
+\B\4\D$\.{ARM}$ \5
+\T{0}\SHC{ ARM for Alarm }\C{ Parameters }\par
+\B\4\D$\.{WAVETHRESHOLD}$ \5
+\T{15}\C{ Number of wave before considering the service on. Range to 255 }\C{
+About 250 ms. Don't take too long or time will run out }\par
+\B\4\D$\.{TIMESTART}$ \5
+\T{12}\SHC{ preset for the timer counter. Range to 255 */ }\C{ Prescaler is set
+to clk/16484. 0.5 seconds *(8e6/16384) is 244.14. 256-244 = 12, leaving 500 ms
+to time-out }\par
+\B\4\D$\.{WAVEHOLDOFFTIME}$ \5
+\T{100}\SHC{ Range to 255 }\C{ hold-off time in us for wave detection }\par
+\B\4\D$\.{ARMTHRESHOLD}$ \5
+\T{1200}\SHC{ Range to 65535 }\C{ alarm arm delay in nowave counts}\C{ chirp
+parameters for alarm }\par
+\B\4\D$\.{CHIRPLENGTH}$ \5
+\T{7}\SHC{ number of waves long }\par
+\B\4\D$\.{CHIRPPERIOD}$ \5
+\T{200}\SHC{ number of waves long }\par
+\B\4\D$\.{LED\_RED}$ \5
+\.{PORTB1}\SHC{ Trinket's LED and pin \#1 }\par
+\B\4\D$\.{LED\_RED\_DD}$ \5
+\.{DDB1}\C{ siren port }\par
+\B\4\D$\.{SIREN}$ \5
+\.{PORTB0}\SHC{ Trinket's Siren and pin \#0 }\par
+\B\4\D$\.{SIREN\_DD}$ \5
+\.{DDB0}\par
+\Y\B\8\#\&{include} \.{<avr/io.h>}\SHC{ need some port access }\6
 \8\#\&{include} \.{<util/delay.h>}\SHC{ need to delay }\6
 \8\#\&{include} \.{<avr/interrupt.h>}\SHC{ have need of an interrupt }\6
 \8\#\&{include} \.{<avr/sleep.h>}\SHC{ have need of sleep }\6
 \8\#\&{include} \.{<stdlib.h>}\par
-\U3.\fi
-
-\M{5}At the beginning the I/O is configured.
-\Y\B\&{int} \\{main}(\&{void})\1\1 $\{{}$\C{ set the led port direction }\6
-$\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{LED\_RED\_DD}){}$;\C{ set the siren port
-direction }\6
-${}\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{SIREN\_DD}){}$;\C{ enable pin change
-interrupt for clear-button}\6
-${}\.{PCMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCINT3}){}$;\C{ General interrupt Mask
-register for clear-button}\6
-${}\.{GIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCIE}){}$;\par
 \fi
 
-\M{6}The LED is set ''assuming'' that there will be an AC signal.
+\M{2}\B\X2:Prototypes\X${}\E{}$\6
+\&{void} \\{ledcntl}(\&{char} \\{state});\SHC{ LED ON and LED OFF }\6
+\&{void} \\{sirencntl}(\&{char} \\{state});\SHC{ alarm siren control }\6
+\&{void} \\{chirp}(\&{char} \\{state});\SHC{ alarm siren modulation }\par
+\U4.\fi
 
+\M{3}
+The f\_state global variable needs the type qualifier `volatile' or
+optimization may eliminate it.
+f\_state is just a simple bit-flag that keeps track what has been handled.
+
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{volatile} \&{unsigned} \&{char} \\{f\_state}${}\K\T{0}{}$;\par
+\U4.\fi
+
+\M{4}
+Atmel pins default as simple inputs so they need to be configured to use them
+for output.
+Additionaly, we need the clear button to wake the device through an interrupt.
+\Y\B\X2:Prototypes\X\6
+\X3:Global variables\X\6
+\&{int} \\{main}(\&{void})\1\1 $\{$ \X13:Initialize pin outputs and inputs\X\par
+\fi
+
+\M{5}
+The LED is set, meaning `on', assuming that there is an AC signal.
+The thought is that it's better to say that there is AC, when there isn't, as
+opposed to the converse.
 \Y\B\C{ turn the led on }\6
 \\{ledcntl}(\.{ON});\par
 \fi
 
-\M{7}Here the timer and comparator are setup.
+\M{6}
+Here is the timer and comparator are setup.
 \Y\B\C{ set up the nowave timer }\6
-\\{initnowavetimer}(\,);\par
+\X15:Initialize the no-wave timer\X\par
+\fi
+
+\M{7}
+The Trinket runs at relativly speedy 8 MHz so the slow 60 Hz signal is no
+issue.
+One could use the ADC but that doesn't make too much sense as the input may
+spend a lot of time cliped.
+We just need to know when the signal changes.
+The inbuilt comparator seems like the right choice, for now.
+
+\Y\B\C{ set up the wave-event comparator }\6
+\X16:Initialize the wave detection\X\par
 \fi
 
 \M{8}
-The Trinket runs at a speedy 8 MHz so the slow 60 Hz signal is no issue.
-One could use the ADC but that doesn't make too much sense as the input may
-spend a lot of time cliped.
-The inbuilt comparator seems like the right choice, for now.
-/* set up the wave-event comparator */
-initwavedetector();
-
-\fi
-
-\M{9}Of course, any interrupt function requires that bit I "Global Interrupt
-Enable"
+Of course, any interrupt function requires that bit ``Global Interrupt Enable''
 is set; usualy done through calling sei().
 \Y\B\C{ Global Int Enable }\6
 \\{sei}(\,);\par
 \fi
 
-\M{10}
+\M{9}
 Rather than burning loops, waiting for something to happen for 16 ms, the sleep
-mode can be used.
+mode is used.
+The specific type of `sleep' is `idle'.
 Interrupts are used to wake it.
-\Y\B\C{ configure sleep\_mode() to go to ``idle''. Idle allows     the counters
-and comparator to continue during sleep. }\6
-\.{MCUCR}${}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM1});{}$\6
-${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM0}){}$;\par
+\Y\B\X17:Configure to wake upon interrupt\X\par
+\fi
+
+\M{10}
+This is the loop that does the work. It should spend most of its time in \PB{%
+\\{sleep\_mode}}, comming out at each interrupt event.
+The ISRs alter the bits in \PB{\\{f\_state}}.
+
+\Y\B\&{for} ( ;  ; \,)\SHC{ forever }\6
+$\{$ \&{static} \&{unsigned} \&{char} \\{nowaves}${}\K\.{WAVETHRESHOLD};{}$\6
+\&{static} \&{unsigned} \&{int} \\{armwait}${}\K\.{ARMTHRESHOLD}{}$;\par
 \fi
 
 \M{11}
-This is the loop that does the work.
-\Y\B\&{for} ( ;  ; \,)\SHC{ forever }\6
+Now we wait in idle for any interrupt event
+\Y\B\\{sleep\_mode}(\,);\par
+\fi
+
+\M{12}
+Some interrupt has been  detected! Let's see which one
+\Y\B\&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{WAVES})){}$\5
 ${}\{{}$\1\6
-\&{static} \&{unsigned} \&{char} \\{nowaves}${}\K\.{WAVETHRESHOLD};{}$\6
-\&{static} \&{unsigned} \&{int} \\{armwait}${}\K\.{ARMTHRESHOLD}{}$;\C{
-hold-off to minimise noise susceptibilty }\7
-\\{waveholdoff}(\,);\C{ now we wait in idle for any interrupt event }\6
-\\{sleep\_mode}(\,);\C{ some interrupt was detected! Let's see which one }\6
-\&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{WAVES})){}$\5
-${}\{{}$\1\6
-${}\\{nowaves}\K(\\{nowaves})\?\\{nowaves}-\T{1}:\T{0};{}$\6
-\&{if} ${}(\R\\{nowaves}{}$)\SHC{ ancilliary electric service restored }\6
+${}\\{nowaves}\K(\\{nowaves})\?\\{nowaves}-\T{1}:\T{0}{}$;\SHC{ countdown to 0,
+but not lower }\6
+\&{if} ${}(\R\\{nowaves}{}$)\SHC{ ancillary electric service restored }\6
 ${}\{{}$\1\6
 \\{ledcntl}(\.{ON});\6
-\&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{ARM})){}$\1\5
+\&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{ARM}){}$)\SHC{ now we annunciate this
+fact }\1\6
 \\{chirp}(\.{ON});\2\6
 ${}\.{TCNT1}\K\.{TIMESTART}{}$;\SHC{ reset the timer }\6
 \4${}\}{}$\2\6
-${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{WAVES}){}$;\SHC{reset int flag }\6
+${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{WAVES}){}$;\SHC{reset int flag
+since actions are complete }\6
 \4${}\}{}$\2\6
 \&{else} \&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{NOWAVES})){}$\5
 ${}\{{}$\1\6
 \\{ledcntl}(\.{OFF});\6
 ${}\\{nowaves}\K\.{WAVETHRESHOLD};{}$\6
 \\{chirp}(\.{OFF});\SHC{ ASE dropped, stop alarm chirp }\6
-${}\\{armwait}\K(\\{armwait})\?\\{armwait}-\T{1}:\T{0};{}$\6
+${}\\{armwait}\K(\\{armwait})\?\\{armwait}-\T{1}:\T{0}{}$;\SHC{ countdown to 0,
+but not lower }\6
 \&{if} ${}(\R\\{armwait}\W\CM\\{f\_state}\AND(\T{1}\LL\.{ARM})){}$\1\5
 ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{ARM}){}$;\C{ at this time the only
 way to disarm is a power cycle }\2\6
 ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{NOWAVES}){}$;\SHC{reset int flag }\6
 \4${}\}{}$\2\6
-\4${}\}{}$\2\6
-\&{return} \T{0};\SHC{ it's the right thing to do! }\6
+\X18:Hold-off all interrupts\X $\}$ \&{return} \T{0};\SHC{ it's the right thing
+to do! }\6
 $\}{}$\par
 \fi
 
-\M{12}
+\M{13}\B\X13:Initialize pin outputs and inputs\X${}\E{}$\6
+${}\{{}$\C{ set the led port direction }\1\6
+${}\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{LED\_RED\_DD}){}$;\C{ set the siren port
+direction }\6
+${}\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{SIREN\_DD}){}$;\C{ enable pin change
+interrupt for clear-button}\6
+${}\.{PCMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCINT3}){}$;\C{ General interrupt Mask
+register for clear-button}\6
+${}\.{GIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCIE});{}$\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\M{14}
 Siren function will arm after a 10 minute power-loss; that is,
 the Trinket is running for a full 10 minutes without seeing AC at pin \#2.
 Once armed, siren will chirp for 100 ms at a 5 second interval,
-only while AC is present.
+only while AC is present. In fact it is called with each AC cycle interrupt so
+that \PB{\.{CHIRPLENGTH}} and \PB{\.{CHIRPPERIOD}} are defined a multiples of
+${1 \over Hz}$.
 It may be disarmed, stopping the chirp, by pressing a button or power-cycle.
-\Y\B\C{ Alarm Pulsing function }\6
-\&{void} \\{chirp}(\&{char} \\{state})\1\1\2\2\6
+
+\Y\B\&{void} \\{chirp}(\&{char} \\{state})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{static} \&{unsigned} \&{char} \\{count}${}\K\.{CHIRPLENGTH};{}$\7
 ${}\\{count}\K(\\{count})\?\\{count}-\T{1}:\.{CHIRPPERIOD};{}$\6
@@ -221,7 +260,7 @@ ${}\\{count}\K(\\{count})\?\\{count}-\T{1}:\.{CHIRPPERIOD};{}$\6
 \\{sirencntl}(\.{OFF});\2\6
 \&{else}\1\5
 \\{sirencntl}(\.{ON});\2\6
-\4${}\}{}$\C{ simple led control }\2\7
+\4${}\}{}$\2\7
 \&{void} \\{ledcntl}(\&{char} \\{state})\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\.{PORTB}\K\\{state}\?\.{PORTB}\OR(\T{1}\LL\.{LED\_RED}):\.{PORTB}\AND\CM(%
@@ -231,62 +270,10 @@ ${}\.{PORTB}\K\\{state}\?\.{PORTB}\OR(\T{1}\LL\.{LED\_RED}):\.{PORTB}\AND\CM(%
 ${}\{{}$\1\6
 ${}\.{PORTB}\K\\{state}\?\.{PORTB}\OR(\T{1}\LL\.{SIREN}):\.{PORTB}\AND\CM(\T{1}%
 \LL\.{SIREN});{}$\6
-\4${}\}{}$\C{ configure the no-wave timer }\2\7
-\&{void} \\{initnowavetimer}(\&{void})\1\1\2\2\6
-${}\{{}$\C{ set a very long prescal of 16384 counts }\1\6
-${}\.{TCCR1}\K((\T{1}\LL\.{CS10})\OR(\T{1}\LL\.{CS11})\OR(\T{1}\LL\.{CS12})\OR(%
-\T{1}\LL\.{CS13})){}$;\C{ Timer/counter 1 f\_overflow interupt enable }\6
-${}\.{TIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{TOIE1});{}$\6
-\4${}\}{}$\C{ configure the the wave detection comparator }\2\6
-\&{void} \\{initwavedetector}(\&{void})\1\1 $\{{}$\par
-\fi
-
-\M{13}
-The ideal input AN1, PB1, is connected to the LED in the Trinket!
-That's not a big issue since the ADC's MUX may be used.
-That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are
-available.
-Since PB3 and PB4 are use for USB, PB2 makes sense here.
-This is marked ``\#2'' on the Trinket.
-PB2 connects the the MUX's ADC1.
-Use of the MUX is selected by setting bit ACME of port ADCSRB. ADC1 is set by
-setting bit MUX0 of register ADMUX
-\Y\B\C{ Setting bit ACME of port ADCSRB to enable the MUX input ADC1 }\6
-\.{ADCSRB}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACME}){}$;\C{ ADC1 is set by setting
-bit MUX0 of register ADMUX }\6
-${}\.{ADMUX}\MRL{{\OR}{\K}}(\T{1}\LL\.{MUX0}){}$;\par
-\fi
-
-\M{14}Disable digital input buffers at AIN[1:0] to save power. This is done by
-setting AIN1D and AIN0D in register DIDR0.
-
-\Y\B\C{ Disable digital inputs to save power }\6
-\.{DIDR0}${}\MRL{{\OR}{\K}}((\T{1}\LL\.{AIN1D})\OR(\T{1}\LL\.{AIN0D})){}$;\par
+\4${}\}{}$\2\par
 \fi
 
 \M{15}
-Both comparator inputs have pins but AIN0 can be connected to a reference of
-1.1 VDC, leaving the negative input to the signal. The ref is selected by
-setting bit ACBG of register ACSR.
-\Y\B\C{ Connect the + input to the band-gap reference }\6
-\.{ACSR}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACBG}){}$;\par
-\fi
-
-\M{16}
-It can be configured to trigger on rising, falling or toggle (default) by
-clearing/setting bits ACIS[1:0] also on register ACSR.
-There is no need for toggle, and falling is selected by simply setting ACIS1.
-\Y\B\C{ Trigger on falling edge only }\6
-\.{ACSR}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIS1}){}$;\par
-\fi
-
-\M{17}
-To enable this interrupt, set the ACIE bit of register ACSR.
-\Y\B\C{ Enable the analog comparator interrupt }\6
-\.{ACSR}${}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});$ $\}{}$\par
-\fi
-
-\M{18}
 A timer is needed to to encompase some number of waves so it can clearly
 discern on from off.
 The timer is also interrupt based. The timer is set to interrupt at overflow.
@@ -295,21 +282,89 @@ Over the course of that time, 25 to 30 comparator interrupts are expected.
 When the timer interrupt does occour, the LED is switched off.
 Comparator Interrupts are counted and at 15 the timer is reset and the LED is
 switched on.
-\Y\B\C{ Wave detection Hold-Off or debounce }\6
-\&{void} \\{waveholdoff}(\,)\1\1\2\2\6
+
+\Y\B\4\X15:Initialize the no-wave timer\X${}\E{}$\6
+${}\{{}$\SHC{set a very long prescale of 16384 counts }\1\6
+${}\.{TCCR1}\K((\T{1}\LL\.{CS10})\OR(\T{1}\LL\.{CS11})\OR(\T{1}\LL\.{CS12})\OR(%
+\T{1}\LL\.{CS13})){}$;\C{ Timer/counter 1 f\_overflow interrupt enable }\6
+${}\.{TIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{TOIE1});{}$\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\M{16}
+The ideal input AN1 (PB1), is connected to the LED in the Trinket!
+That's not a big issue since the ADC's MUX may be used.
+That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are
+available.
+Since PB3 and PB4 are use for USB, PB2 makes sense here.
+This is marked ``\#2'' on the Trinket.
+PB2 connects the the MUX's ADC1.
+Use of the MUX is selected by setting bit ACME of port ADCSRB. ADC1 is set by
+setting bit MUX0 of register ADMUX
+
+
+Disable digital input buffers at AIN[1:0] to save power. This is done by
+setting AIN1D and AIN0D in register DIDR0.
+
+Both comparator inputs have pins but AIN0 can be connected to a reference of
+1.1 VDC, leaving the negative input to the signal. The ref is selected by
+setting bit ACBG of register ACSR.
+
+
+It can be configured to trigger on rising, falling or toggle (default) by
+clearing/setting bits ACIS[1:0] also on register ACSR.
+There is no need for toggle, and falling is selected by simply setting ACIS1.
+
+
+To enable this interrupt, set the ACIE bit of register ACSR.
+
+\Y\B\4\X16:Initialize the wave detection\X${}\E{}$\6
+${}\{{}$\C{ Setting bit ACME of port ADCSRB to enable the MUX input ADC1 }\1\6
+${}\.{ADCSRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACME}){}$;\C{ ADC1 is set by setting
+bit MUX0 of register ADMUX }\6
+${}\.{ADMUX}\MRL{{\OR}{\K}}(\T{1}\LL\.{MUX0}){}$;\C{ Disable digital inputs to
+save power }\6
+${}\.{DIDR0}\MRL{{\OR}{\K}}((\T{1}\LL\.{AIN1D})\OR(\T{1}\LL\.{AIN0D})){}$;\C{
+Connect the + input to the band-gap reference }\6
+${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACBG}){}$;\C{ Trigger on falling edge
+only }\6
+${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIS1}){}$;\C{ Enable the analog
+comparator interrupt }\6
+${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});{}$\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{17}
+Setting these bits configure sleep\_mode() to go to ``idle''.
+Idle allows the counters and comparator to continue during sleep.
+
+\Y\B\4\X17:Configure to wake upon interrupt\X${}\E{}$\6
+${}\{{}$\1\6
+${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM1});{}$\6
+${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM0});{}$\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{18}\B\X18:Hold-off all interrupts\X${}\E{}$\6
 ${}\{{}$\C{ Disable the analog comparator interrupt }\1\6
 ${}\.{ACSR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ACIE});{}$\6
 \\{\_delay\_us}(\.{WAVEHOLDOFFTIME});\C{ Enable the analog comparator interrupt
 }\6
 ${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});{}$\6
-\4${}\}{}$\C{ Timer ISR }\2\7
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{19}
+This is the ISR for the main timer.
+When this overflows it generaly means the ASE has been off for a while.
+\Y\B\C{ Timer ISR }\6
 \.{ISR}(\\{TIMER1\_OVF\_vect})\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{NOWAVES});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{19}
+\M{20}
 The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
 register but the vector ANA\_COMP\_vect is the simpler way.
 
@@ -317,7 +372,12 @@ register but the vector ANA\_COMP\_vect is the simpler way.
 \.{ISR}(\\{ANA\_COMP\_vect})\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{WAVES});{}$\6
-\4${}\}{}$\C{ Clear Button ISR }\2\7
+\4${}\}{}$\2\par
+\fi
+
+\M{21}
+This ISR responds to the Clear button.
+\Y\B\C{ Clear Button ISR }\6
 \.{ISR}(\\{PCINT0\_vect})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{if} ${}(\.{PORTB}\AND(\T{1}\LL\.{ARMCLEAR})){}$\1\5
@@ -325,7 +385,12 @@ ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ARM});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
+\M{22}
+Done
+
+\fi
+
 
 \inx
 \fin
-\con
+\end

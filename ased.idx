@@ -1,77 +1,73 @@
 \I\\{\_delay\_us}, 18.
-\I\.{ACBG}, 15.
-\I\.{ACIE}, 17, 18.
+\I\.{ACBG}, 16.
+\I\.{ACIE}, 16, 18.
 \I\.{ACIS1}, 16.
-\I\.{ACME}, 13.
-\I\.{ACSR}, 15, 16, 17, 18.
-\I\.{ADCSRB}, 13.
-\I\.{ADMUX}, 13.
-\I\.{AIN0D}, 14.
-\I\.{AIN1D}, 14.
-\I\\{ANA\_COMP\_vect}, 19.
+\I\.{ACME}, 16.
+\I\.{ACSR}, 16, 18.
+\I\.{ADCSRB}, 16.
+\I\.{ADMUX}, 16.
+\I\.{AIN0D}, 16.
+\I\.{AIN1D}, 16.
+\I\\{ANA\_COMP\_vect}, 20.
 \I\\{Ancillary}, 1.
-\I\.{ARM}, \[3], 11, 19.
-\I\.{ARMCLEAR}, \[3], 19.
-\I\.{ARMCLEAR\_DD}, \[3].
-\I\.{ARMTHRESHOLD}, \[3], 11.
-\I\\{armwait}, \[11].
-\I\.{ASED}, 4.
-\I\\{chirp}, \[3], 11, \[12].
-\I\.{CHIRPLENGTH}, \[3], 12.
-\I\.{CHIRPPERIOD}, \[3], 12.
-\I\.{CLEAR}, \[3].
-\I\\{count}, \[12].
-\I\.{CS10}, 12.
-\I\.{CS11}, 12.
-\I\.{CS12}, 12.
-\I\.{CS13}, 12.
-\I\.{DDB0}, 3.
-\I\.{DDB1}, 3.
-\I\.{DDB3}, 3.
-\I\.{DDRB}, 5.
-\I\.{DIDR0}, 14.
-\I\.{F\_CPU}, \[3].
-\I\\{f\_state}, \[3], 11, 18, 19.
-\I\.{GIMSK}, 5.
-\I\\{initnowavetimer}, \[3], 7, \[12].
-\I\\{initwavedetector}, \[3], \[12].
-\I\.{ISR}, \[18], \[19].
-\I\.{LED\_RED}, \[3], 12.
-\I\.{LED\_RED\_DD}, \[3], 5.
-\I\\{ledcntl}, \[3], 6, 11, \[12].
-\I\\{main}, \[5].
-\I\.{MCUCR}, 10.
-\I\.{MUX0}, 13.
-\I\.{NOWAVES}, \[3], 11, 18.
-\I\\{nowaves}, \[11].
-\I\.{OFF}, \[3], 11, 12.
-\I\.{ON}, \[3], 6, 11, 12.
-\I\.{PCIE}, 5.
-\I\\{PCINT0\_vect}, 19.
-\I\.{PCINT3}, 5.
-\I\.{PCMSK}, 5.
-\I\.{PORTB}, 12, 19.
-\I\.{PORTB0}, 3.
-\I\.{PORTB1}, 3.
-\I\.{PORTB3}, 3.
-\I\\{sei}, 9.
+\I\.{ARM}, \[1], 12, 21.
+\I\.{ARMCLEAR}, \[1], 21.
+\I\.{ARMCLEAR\_DD}, \[1].
+\I\.{ARMTHRESHOLD}, \[1], 10.
+\I\\{armwait}, \[10], 12.
+\I\\{chirp}, \[2], 12, \[14].
+\I\.{CHIRPLENGTH}, \[1], 14.
+\I\.{CHIRPPERIOD}, \[1], 14.
+\I\.{CLEAR}, \[1].
+\I\\{count}, \[14].
+\I\.{CS10}, 15.
+\I\.{CS11}, 15.
+\I\.{CS12}, 15.
+\I\.{CS13}, 15.
+\I\.{DDB0}, 1.
+\I\.{DDB1}, 1.
+\I\.{DDB3}, 1.
+\I\.{DDRB}, 13.
+\I\.{DIDR0}, 16.
+\I\.{F\_CPU}, \[1].
+\I\\{f\_state}, \[3], 10, 12, 19, 20, 21.
+\I\.{GIMSK}, 13.
+\I\.{ISR}, \[19], \[20], \[21].
+\I\.{LED\_RED}, \[1], 14.
+\I\.{LED\_RED\_DD}, \[1], 13.
+\I\\{ledcntl}, \[2], 5, 12, \[14].
+\I\\{main}, \[4].
+\I\.{MCUCR}, 17.
+\I\.{MUX0}, 16.
+\I\.{NOWAVES}, \[1], 12, 19.
+\I\\{nowaves}, \[10], 12.
+\I\.{OFF}, \[1], 12, 14.
+\I\.{ON}, \[1], 5, 12, 14.
+\I\.{PCIE}, 13.
+\I\\{PCINT0\_vect}, 21.
+\I\.{PCINT3}, 13.
+\I\.{PCMSK}, 13.
+\I\.{PORTB}, 14, 21.
+\I\.{PORTB0}, 1.
+\I\.{PORTB1}, 1.
+\I\.{PORTB3}, 1.
+\I\\{sei}, 8.
 \I\\{Service}, 1.
-\I\.{SET}, \[3].
-\I\.{SIREN}, \[3], 12.
-\I\.{SIREN\_DD}, \[3], 5.
-\I\\{sirencntl}, \[3], \[12].
-\I\\{sleep\_mode}, 11.
-\I\.{SM0}, 10.
-\I\.{SM1}, 10.
-\I\\{state}, \[3], \[12].
-\I\.{TCCR1}, 12.
-\I\.{TCNT1}, 11.
-\I\\{TIMER1\_OVF\_vect}, 18.
-\I\.{TIMESTART}, \[3], 11.
-\I\.{TIMSK}, 12.
-\I\.{TOIE1}, 12.
-\I\\{waveholdoff}, \[3], 11, \[18].
-\I\.{WAVEHOLDOFFTIME}, \[3], 18.
-\I\.{WAVES}, \[3], 11, 19.
-\I\.{WAVETHRESHOLD}, \[3], 11.
+\I\.{SET}, \[1].
+\I\.{SIREN}, \[1], 14.
+\I\.{SIREN\_DD}, \[1], 13.
+\I\\{sirencntl}, \[2], \[14].
+\I\\{sleep\_mode}, 10, 11.
+\I\.{SM0}, 17.
+\I\.{SM1}, 17.
+\I\\{state}, \[2], \[14].
+\I\.{TCCR1}, 15.
+\I\.{TCNT1}, 12.
+\I\\{TIMER1\_OVF\_vect}, 19.
+\I\.{TIMESTART}, \[1], 12.
+\I\.{TIMSK}, 15.
+\I\.{TOIE1}, 15.
+\I\.{WAVEHOLDOFFTIME}, \[1], 18.
+\I\.{WAVES}, \[1], 12, 20.
+\I\.{WAVETHRESHOLD}, \[1], 10, 12.
 
