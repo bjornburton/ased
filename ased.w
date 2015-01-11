@@ -4,9 +4,11 @@
 \nocon % omit table of contents
 \datethis % print date on listing
 
+@
+ASED Version 1.1.0r
+Ancillary Service Electric Detector
+Bjorn Burton
 
-
-@* ASED.
 With an emergency generator connected through an interlocked load-center, it's hard to tell when the |Ancillary Service| has been restored. Switching back to Main requiers shutting  everything down for a moment.
 It would be good to know if main is live before swicking back. The obvious method is to measure the voltage at the main-breaker's input.
 The safety concern is that it's not breaker-protected making for a massive fault-current,
@@ -33,7 +35,6 @@ The circuit would need a high input impedance, so as to see a strong enough sign
 The circuit would need a reference to ground to compare to.
 The input may need a bit of protection from line transients, which could pass trough the gimmick.
 
-@
 I had seven Ada Fruit Trinkets just laying around. They use the Atmel 
 ATTINY85 processor. The analog inputs are about 100~M$\Omega$. Not great, but
 I think it should be good enough. If we can muster 1~pf of gimmick, we will
@@ -42,59 +43,59 @@ $100e6 {170 \over  {(2pi*60*1e-12)^{-1} + 100e6)} } = 6.16 $ volts peak, ignorin
 input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
-
-@ Here's the code
-
-@c
-/* AVR clock frequency in Hz, used by util/delay.h */
-#define F_CPU 8000000UL
+@d F_CPU 8000000UL
 
 
+@d ARMCLEAR PORTB3 // Trinket's LED and pin \#3
+@d ARMCLEAR_DD DDB3
 
-/**** Defines *****/
- /* clear-button port */
-# define ARMCLEAR PORTB3 // Trinket's LED and pin \#3
-# define ARMCLEAR_DD DDB3
-
- /* LED port */
-# define LED_RED PORTB1  // Trinket's LED and pin \#1
-# define LED_RED_DD DDB1
-
- /* siren port */
-# define SIREN PORTB0 // Trinket's LED and pin \#0
-# define SIREN_DD DDB0
-
- /* Bool*/
-# define ON 1
-# define OFF 0
-# define SET 1
-# define CLEAR 0
+  /* Boolean */
+@d ON 1
+@d OFF 0
+@d SET 1
+@d CLEAR 0
 
  /* Flags for f\_state */
-# define NOWAVES 2 // no ASE detected for some time 
-# define WAVES   1 // ASE detected
-# define ARM     0 // ARM for Alarm
+@d NOWAVES 2 // no ASE detected for some time 
+@d WAVES   1 // ASE detected
+@d ARM     0 // ARM for Alarm
 
  /* Parameters */
-# define WAVETHRESHOLD 15
+@d WAVETHRESHOLD 15
 /* Number of wave before considering the service on. Range to 255 */
 /* About 250 ms. Don't take too long or time will run out */
 
-# define TIMESTART 12     // preset for the timer counter. Range to 255 */
+@d TIMESTART 12     // preset for the timer counter. Range to 255 */
 /* Prescaler is set to clk/16484. 
 0.5 seconds *(8e6/16384) is 244.14.
 256-244 = 12, leaving 500 ms to time-out */
 
-# define WAVEHOLDOFFTIME 100 // Range to 255
+@d WAVEHOLDOFFTIME 100 // Range to 255
 /* hold-off time in us for wave detection */
 
-# define ARMTHRESHOLD 1200 // Range to 65535
+@d ARMTHRESHOLD 1200 // Range to 65535
 /* alarm arm delay in nowave counts*/
 
 /* chirp parameters for alarm */
-# define CHIRPLENGTH 7 // number of waves long
-# define CHIRPPERIOD 200 // number of waves long
+@d CHIRPLENGTH 7 // number of waves long
+@d CHIRPPERIOD 200 // number of waves long
 
+
+@d LED_RED PORTB1  // Trinket's LED and pin \#1
+@d LED_RED_DD DDB1
+
+ /* siren port */
+@d SIREN PORTB0 // Trinket's LED and pin \#0
+@d SIREN_DD DDB0
+
+
+
+@c
+# include <avr/io.h> // need some port access
+# include <util/delay.h> // need to delay
+# include <avr/interrupt.h> // have need of an interrupt
+# include <avr/sleep.h> // have need of sleep
+# include <stdlib.h>
 
 /* Function Declarations */
 void ledcntl(char state);
@@ -108,26 +109,13 @@ void waveholdoff(void); // for noise resistance...debounce
 /* Global variables */
 volatile unsigned char f_state = 0x00; 
 
-@<Header files to include@>@/
-
-@ |ASED| Version 1.1.0r\\*
-Ancillary Service Electric Detector\\*
-Bjorn Burton\\*
-Just for fun.\\*
 
 
-@<Header files...@>=
-# include <avr/io.h> // need some port access
-# include <util/delay.h> // need to delay
-# include <avr/interrupt.h> // have need of an interrupt
-# include <avr/sleep.h> // have need of sleep
-# include <stdlib.h>
-
-
-@ At the beginning the I/O is configured.
+@* The I/O pins are configured first.
 @c
 int main(void)
 {
+
  /* set the led port direction */
   DDRB |= (1<<LED_RED_DD);
 
@@ -140,8 +128,7 @@ int main(void)
  /* General interrupt Mask register for clear-button*/
   GIMSK |= (1<<PCIE);
 
-@ The LED is set ''assuming'' that there will be an AC signal.
-
+@ The LED is set, meaning `on', assuming that there is an AC signal. The thought is that it's better to say that there is AC, when there isn't, as opposed to the converse.
 @c
  /* turn the led on */
   ledcntl(ON); 
@@ -149,16 +136,18 @@ int main(void)
 @ Here the timer and comparator are setup.
 @c
  /* set up the nowave timer */
-  initnowavetimer();
+  @<Initialize the no-wave timer...@>
 
 @ 
 The Trinket runs at a speedy 8 MHz so the slow 60 Hz signal is no issue.
 One could use the ADC but that doesn't make too much sense as the input may spend a lot of time cliped.
 The inbuilt comparator seems like the right choice, for now.
- /* set up the wave-event comparator */
-  initwavedetector();
 
-@ Of course, any interrupt function requires that bit I "Global Interrupt Enable"
+@c
+ /* set up the wave-event comparator */
+ @<Initialize the wave detection...@>
+
+@ Of course, any interrupt function requires that bit ``Global Interrupt Enable''
 is set; usualy done through calling sei().
 @c
  /* Global Int Enable */
@@ -173,35 +162,36 @@ Interrupts are used to wake it.
   MCUCR &= ~(1<<SM0);
 
 @
-This is the loop that does the work.
+This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event. The ISRs alter the bits in |f_state|.
+
 @c
  for (;;) // forever
   {
    static unsigned char nowaves = WAVETHRESHOLD;
    static unsigned int armwait = ARMTHRESHOLD;  
       
-  /* hold-off to minimise noise susceptibilty */  
+  /* hold-off to minimize noise susceptibility */  
   waveholdoff(); 
 
-  /* now we wait in idle for any interrupt event */
+  @  now we wait in idle for any interrupt event @c 
   sleep_mode();
 
-  /* some interrupt was detected! Let's see which one */
+  @ Some interrupt has been  detected! Let's see which one @c
   if(f_state & (1<<WAVES)) 
     {
-     nowaves = (nowaves)?nowaves-1:0;
+     nowaves = (nowaves)?nowaves-1:0; // countdown to 0, but not lower
 
-     if(!nowaves) // ancilliary electric service restored
+     if(!nowaves) // ancillary electric service restored
        {
         ledcntl(ON);
 
-        if(f_state & (1<<ARM))
+        if(f_state & (1<<ARM)) // now we annunciate this fact
            chirp(ON);
  
         TCNT1 = TIMESTART;  // reset the timer
        }
 
-     f_state &= ~(1<<WAVES); //reset int flag
+     f_state &= ~(1<<WAVES); //reset int flag since actions are complete
     
      }
      else if(f_state & (1<<NOWAVES))
@@ -211,7 +201,7 @@ This is the loop that does the work.
 
           chirp(OFF);  // ASE dropped, stop alarm chirp
           
-          armwait = (armwait)?armwait-1:0;
+          armwait = (armwait)?armwait-1:0; // countdown to 0, but not lower
 
           if(!armwait && ~f_state & (1<<ARM) )
               f_state |= (1<<ARM);
@@ -228,10 +218,11 @@ return 0; // it's the right thing to do!
 Siren function will arm after a 10 minute power-loss; that is,
 the Trinket is running for a full 10 minutes without seeing AC at pin \#2.
 Once armed, siren will chirp for 100 ms at a 5 second interval,
-only while AC is present.
+only while AC is present. In fact it is called with each AC cycle interrupt so
+that |CHIRPLENGTH| and |CHIRPPERIOD| are defined a multiples of ${1 \over Hz}$.
 It may be disarmed, stopping the chirp, by pressing a button or power-cycle.
+
 @c
-/* Alarm Pulsing function */
 void chirp(char state)
 {
 static unsigned char count = CHIRPLENGTH;
@@ -246,7 +237,6 @@ static unsigned char count = CHIRPLENGTH;
 }
 
 
-/* simple led control */
 void ledcntl(char state)
 {
   PORTB = state ? PORTB | (1<<LED_RED) : PORTB & ~(1<<LED_RED);
@@ -258,23 +248,24 @@ void sirencntl(char state)
   PORTB = state ? PORTB | (1<<SIREN) : PORTB & ~(1<<SIREN);
 }
 
+@
+A timer is needed to to encompase some number of waves so it can clearly discern on from off.
+The timer is also interrupt based. The timer is set to interrupt at overflow.
+It could overflow within about 1/2 second.
+Over the course of that time, 25 to 30 comparator interrupts are expected.
+When the timer interrupt does occour, the LED is switched off.
+Comparator Interrupts are counted and at 15 the timer is reset and the LED is switched on.
 
-/* configure the no-wave timer */
-void initnowavetimer(void)
+@ @<Initialize the no-wave timer...@>=
 {
- /* set a very long prescal of 16384 counts */
+//set a very long prescale of 16384 counts
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
 
- /* Timer/counter 1 f\_overflow interupt enable */
+ /* Timer/counter 1 f\_overflow interrupt enable */
  TIMSK |= (1<<TOIE1);
-
 }
 
 
-
-/* configure the the wave detection comparator */
-void initwavedetector(void)
-{
 @
 The ideal input AN1, PB1, is connected to the LED in the Trinket!
 That's not a big issue since the ADC's MUX may be used.
@@ -283,50 +274,40 @@ Since PB3 and PB4 are use for USB, PB2 makes sense here.
 This is marked ``\#2'' on the Trinket.
 PB2 connects the the MUX's ADC1.
 Use of the MUX is selected by setting bit ACME of port ADCSRB. ADC1 is set by setting bit MUX0 of register ADMUX 
-@c
- /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
- ADCSRB |= (1<<ACME);
 
- /* ADC1 is set by setting bit MUX0 of register ADMUX */
- ADMUX |= (1<<MUX0);
 
-@ Disable digital input buffers at AIN[1:0] to save power. This is done by
+Disable digital input buffers at AIN[1:0] to save power. This is done by
 setting AIN1D and AIN0D in register DIDR0.
 
-@c
- /* Disable digital inputs to save power */
- DIDR0  |= ((1<<AIN1D)|(1<<AIN0D));
-@
 Both comparator inputs have pins but AIN0 can be connected to a reference of
 1.1 VDC, leaving the negative input to the signal. The ref is selected by
 setting bit ACBG of register ACSR.
-@c 
- /* Connect the + input to the band-gap reference */
- ACSR |= (1<<ACBG);
- 
-@
+
+
 It can be configured to trigger on rising, falling or toggle (default) by clearing/setting bits ACIS[1:0] also on register ACSR.
 There is no need for toggle, and falling is selected by simply setting ACIS1.
-@c 
+
+
+To enable this interrupt, set the ACIE bit of register ACSR.
+
+@ @<Initialize the wave detection...@>=
+{
+ /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
+ ADCSRB |= (1<<ACME);
+ /* ADC1 is set by setting bit MUX0 of register ADMUX */
+ ADMUX |= (1<<MUX0);
+  /* Disable digital inputs to save power */
+ DIDR0  |= ((1<<AIN1D)|(1<<AIN0D));
+ /* Connect the + input to the band-gap reference */
+ ACSR |= (1<<ACBG);
  /* Trigger on falling edge only */
  ACSR |= (1<<ACIS1);
- @
- To enable this interrupt, set the ACIE bit of register ACSR.
- @c
  /* Enable the analog comparator interrupt */
  ACSR |= (1<<ACIE);
-
 }
 
-@
-A timer is needed to to encompase some number of waves so it can clearly discern on from off.
-The timer is also interrupt based. The timer is set to interrupt at overflow.
-It could overflow within about 1/2 second.
-Over the course of that time, 25 to 30 comparator interrupts are expected.
-When the timer interrupt does occour, the LED is switched off.
-Comparator Interrupts are counted and at 15 the timer is reset and the LED is switched on.
-@c
-/* Wave detection Hold-Off or debounce */
+@ @c
+
 void waveholdoff()
 {
  /* Disable the analog comparator interrupt */
@@ -338,7 +319,6 @@ void waveholdoff()
  ACSR |= (1<<ACIE);
 
 }
-
 
 
 /* Timer ISR */
@@ -364,5 +344,6 @@ ISR(PCINT0_vect)
  if(PORTB & (1<<ARMCLEAR))
     f_state &= ~(1<<ARM);
 }
-
+@
+Done
 
