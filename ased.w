@@ -97,38 +97,34 @@ a red LED on-board.
 # include <avr/sleep.h> // have need of sleep
 # include <stdlib.h>
 
-/* Function Declarations */
-void ledcntl(char state);
-void sirencntl(char state); //alarm siren control
+@ @<Prototypes@>=
+void ledcntl(char state); // LED ON and LED OFF
+void sirencntl(char state); // alarm siren control
 void chirp(char state); // alarm siren modulation
-void initnowavetimer(void); // sets up timer
-void initwavedetector(void); // sets up comparator
-void waveholdoff(void); // for noise resistance...debounce
 
+@
+The f\_state global variable needs the type qualifier `volatile' or optimization may eliminate it.
+f\_state is just a simple bit-flag that keeps track what has been handled. 
 
-/* Global variables */
+@<Global var...@>=
 volatile unsigned char f_state = 0x00; 
+@
 
-
-
-@* The I/O pins are configured first.
 @c
+@< Prototypes @>@;
+@< Global variables @>@;
+
 int main(void)
 {
 
- /* set the led port direction */
-  DDRB |= (1<<LED_RED_DD);
+@
+Pins default as simple inputs so they need to be confugured to use them for output.
+Additionaly, we need the clear button to wake the device through an interrupt.
+@c
+@<Initialize pin outputs and inputs@>
 
- /* set the siren port direction */
-  DDRB |= (1<<SIREN_DD);
-
- /* enable pin change interrupt for clear-button*/
-  PCMSK |= (1<<PCINT3);
-
- /* General interrupt Mask register for clear-button*/
-  GIMSK |= (1<<PCIE);
-
-@ The LED is set, meaning `on', assuming that there is an AC signal. The thought is that it's better to say that there is AC, when there isn't, as opposed to the converse.
+@ The LED is set, meaning `on', assuming that there is an AC signal.
+The thought is that it's better to say that there is AC, when there isn't, as opposed to the converse.
 @c
  /* turn the led on */
   ledcntl(ON); 
@@ -136,16 +132,17 @@ int main(void)
 @ Here the timer and comparator are setup.
 @c
  /* set up the nowave timer */
-  @<Initialize the no-wave timer...@>
+  @<Initialize the no-wave timer@>
 
 @ 
-The Trinket runs at a speedy 8 MHz so the slow 60 Hz signal is no issue.
+The Trinket runs at relativly speedy 8 MHz so the slow 60 Hz signal is no issue.
 One could use the ADC but that doesn't make too much sense as the input may spend a lot of time cliped.
+We just need to know when the signal changes.
 The inbuilt comparator seems like the right choice, for now.
 
 @c
  /* set up the wave-event comparator */
- @<Initialize the wave detection...@>
+ @<Initialize the wave detection@>
 
 @ Of course, any interrupt function requires that bit ``Global Interrupt Enable''
 is set; usualy done through calling sei().
@@ -153,16 +150,15 @@ is set; usualy done through calling sei().
  /* Global Int Enable */
   sei();
 @  
-Rather than burning loops, waiting for something to happen for 16 ms, the sleep mode can be used.
+Rather than burning loops, waiting for something to happen for 16 ms, the sleep mode is used.
+The specific type of `sleep' is `idle'.
 Interrupts are used to wake it.
 @c
- /* configure sleep\_mode() to go to ``idle''. Idle allows
-    the counters and comparator to continue during sleep. */
-  MCUCR &= ~(1<<SM1); 
-  MCUCR &= ~(1<<SM0);
+@<Configure to wake upon interrupt...@>
 
 @
-This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event. The ISRs alter the bits in |f_state|.
+This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event.
+The ISRs alter the bits in |f_state|.
 
 @c
  for (;;) // forever
@@ -170,13 +166,12 @@ This is the loop that does the work. It should spend most of its time in |sleep_
    static unsigned char nowaves = WAVETHRESHOLD;
    static unsigned int armwait = ARMTHRESHOLD;  
       
-  /* hold-off to minimize noise susceptibility */  
-  waveholdoff(); 
-
-  @  now we wait in idle for any interrupt event @c 
+@  now we wait in idle for any interrupt event
+@c 
   sleep_mode();
 
-  @ Some interrupt has been  detected! Let's see which one @c
+@ Some interrupt has been  detected! Let's see which one
+@c
   if(f_state & (1<<WAVES)) 
     {
      nowaves = (nowaves)?nowaves-1:0; // countdown to 0, but not lower
@@ -209,10 +204,30 @@ This is the loop that does the work. It should spend most of its time in |sleep_
 
           f_state &= ~(1<<NOWAVES); //reset int flag
           }
+
+@<Hold-off all interrupts@>
   }  
 
 return 0; // it's the right thing to do!
 }
+
+
+
+@ @<Initialize pin outputs...@>=
+{
+ /* set the led port direction */
+  DDRB |= (1<<LED_RED_DD);
+
+ /* set the siren port direction */
+  DDRB |= (1<<SIREN_DD);
+
+ /* enable pin change interrupt for clear-button*/
+  PCMSK |= (1<<PCINT3);
+
+ /* General interrupt Mask register for clear-button*/
+  GIMSK |= (1<<PCIE);
+}
+
 
 @
 Siren function will arm after a 10 minute power-loss; that is,
@@ -256,7 +271,7 @@ Over the course of that time, 25 to 30 comparator interrupts are expected.
 When the timer interrupt does occour, the LED is switched off.
 Comparator Interrupts are counted and at 15 the timer is reset and the LED is switched on.
 
-@ @<Initialize the no-wave timer...@>=
+@<Initialize the no-wave timer...@>=
 {
 //set a very long prescale of 16384 counts
  TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
@@ -290,7 +305,7 @@ There is no need for toggle, and falling is selected by simply setting ACIS1.
 
 To enable this interrupt, set the ACIE bit of register ACSR.
 
-@ @<Initialize the wave detection...@>=
+@<Initialize the wave detection...@>=
 {
  /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
  ADCSRB |= (1<<ACME);
@@ -306,26 +321,34 @@ To enable this interrupt, set the ACIE bit of register ACSR.
  ACSR |= (1<<ACIE);
 }
 
-@ @c
+@
+Setting these bits configure sleep\_mode() to go to ``idle''.
+Idle allows the counters and comparator to continue during sleep.
 
-void waveholdoff()
+@<Configure to wake upon interrupt...@>=
 {
- /* Disable the analog comparator interrupt */
- ACSR &= ~(1<<ACIE);
-
- _delay_us(WAVEHOLDOFFTIME);
- 
- /* Enable the analog comparator interrupt */
- ACSR |= (1<<ACIE);
-
+  MCUCR &= ~(1<<SM1); 
+  MCUCR &= ~(1<<SM0);
 }
 
 
+@ @<Hold-off all interrupts...@>=
+{
+ /* Disable the analog comparator interrupt */
+ ACSR &= ~(1<<ACIE);
+ _delay_us(WAVEHOLDOFFTIME);
+ /* Enable the analog comparator interrupt */
+ ACSR |= (1<<ACIE);
+}
+
+@
+@c
 /* Timer ISR */
 ISR(TIMER1_OVF_vect)
 {
   f_state |= (1<<NOWAVES); 
 }
+
 
 @
 The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
