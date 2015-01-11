@@ -108,7 +108,7 @@ void chirp(char state); // alarm siren modulation
 
 @
 The f\_state global variable needs the type qualifier `volatile' or optimization may eliminate it.
-f\_state is just a simple bit-flag that keeps track what has been handled. 
+f\_state is just a simple bit-flag array that keeps track what has been handled. 
 
 @<Global var...@>=
 volatile unsigned char f_state = 0; 
