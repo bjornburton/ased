@@ -62,7 +62,7 @@ volatile unsigned char f_state= 0;
 int main(void)
 {
 
-/*23:*/
+/*24:*/
 #line 227 "./ased.w"
 
 {
@@ -77,7 +77,7 @@ GIMSK|= (1<<PCIE);
 }
 
 
-/*:23*/
+/*:24*/
 #line 133 "./ased.w"
 
 
@@ -90,7 +90,7 @@ ledcntl(ON);
 /*:15*//*16:*/
 #line 144 "./ased.w"
 
-/*25:*/
+/*26:*/
 #line 278 "./ased.w"
 
 {
@@ -102,14 +102,14 @@ TIMSK|= (1<<TOIE1);
 }
 
 
-/*:25*/
+/*:26*/
 #line 145 "./ased.w"
 
 
 /*:16*//*17:*/
 #line 153 "./ased.w"
 
-/*26:*/
+/*27:*/
 #line 311 "./ased.w"
 
 {
@@ -127,7 +127,7 @@ ACSR|= (1<<ACIS1);
 ACSR|= (1<<ACIE);
 }
 
-/*:26*/
+/*:27*/
 #line 154 "./ased.w"
 
 
@@ -138,7 +138,7 @@ sei();
 /*:18*//*19:*/
 #line 165 "./ased.w"
 
-/*27:*/
+/*28:*/
 #line 331 "./ased.w"
 
 {
@@ -147,7 +147,7 @@ MCUCR&= ~(1<<SM0);
 }
 
 
-/*:27*/
+/*:28*/
 #line 166 "./ased.w"
 
 
@@ -198,7 +198,7 @@ if(!armwait&&~f_state&(1<<ARM))f_state|= (1<<ARM);
 f_state&= ~(1<<NOWAVES);
 }
 
-/*28:*/
+/*29:*/
 #line 338 "./ased.w"
 
 {
@@ -209,7 +209,7 @@ _delay_us(WAVEHOLDOFFTIME);
 ACSR|= (1<<ACIE);
 }
 
-/*:28*/
+/*:29*/
 #line 219 "./ased.w"
 
 }
@@ -217,9 +217,7 @@ ACSR|= (1<<ACIE);
 return 0;
 }
 
-
-
-/*:22*//*24:*/
+/*:22*//*25:*/
 #line 248 "./ased.w"
 
 void chirp(char state)
@@ -243,7 +241,7 @@ void sirencntl(char state)
 PORTB= state?PORTB|(1<<PORTB0):PORTB&~(1<<PORTB0);
 }
 
-/*:24*//*29:*/
+/*:25*//*30:*/
 #line 350 "./ased.w"
 
 
@@ -253,7 +251,7 @@ f_state|= (1<<NOWAVES);
 }
 
 
-/*:29*//*30:*/
+/*:30*//*31:*/
 #line 362 "./ased.w"
 
 
@@ -263,7 +261,7 @@ f_state|= (1<<WAVES);
 }
 
 
-/*:30*//*31:*/
+/*:31*//*32:*/
 #line 372 "./ased.w"
 
 
@@ -272,4 +270,4 @@ ISR(PCINT0_vect)
 if(PORTB&(1<<PORTB3))
 f_state&= ~(1<<ARM);
 }
-/*:31*/
+/*:32*/

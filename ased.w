@@ -222,7 +222,7 @@ Let's see which one by testing each possibility and acting on it.
 return 0; // it's the right thing to do!
 } // end main
 
-
+@* These are the supporting routines and configuration blocks.  
 
 @ @<Initialize pin outputs...@>=
 {

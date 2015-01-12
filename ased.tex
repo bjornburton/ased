@@ -122,7 +122,7 @@ This is the number of waves before considering the ASE `on'. Range to 255.
 \T{15}\par
 \fi
 
-\M{7}The prescaler is set to clk/16484 at \PB{$\X25:Initialize the no-wave
+\M{7}The prescaler is set to clk/16484 at \PB{$\X26:Initialize the no-wave
 timer\X$}.
 \PB{\.{"TIMESTART"}} is the timer preset so that overflow happens in about
 500~ms.
@@ -134,7 +134,7 @@ is reset.
 \fi
 
 \M{8} This is the hold-off time in us for wave detection. This value is used by
-the \PB{\.{"\\\_delay\\\_us()"}} function here \PB{$\X28:Hold-off all
+the \PB{\.{"\\\_delay\\\_us()"}} function here \PB{$\X29:Hold-off all
 interrupts\X$}.
 \Y\B\4\D$\.{WAVEHOLDOFFTIME}$ \5
 \T{100}\SHC{ Range to 255 }\par
@@ -184,7 +184,7 @@ Additionaly, we need the clear button to wake the device through an interrupt.
 \Y\B\X11:Include\X\6
 \X12:Prototypes\X\6
 \X13:Global variables\X\6
-\&{int} \\{main}(\&{void})\1\1 $\{$ \X23:Initialize pin outputs and inputs\X\par
+\&{int} \\{main}(\&{void})\1\1 $\{$ \X24:Initialize pin outputs and inputs\X\par
 \fi
 
 \M{15}
@@ -197,7 +197,7 @@ opposed to the converse.
 
 \M{16}
 Here the timer and comparator are setup.
-\Y\B\X25:Initialize the no-wave timer\X\par
+\Y\B\X26:Initialize the no-wave timer\X\par
 \fi
 
 \M{17}
@@ -208,7 +208,7 @@ spend a lot of time cliped.
 We just need to know when the signal changes.
 The inbuilt comparator seems like the right choice, for now.
 
-\Y\B\X26:Initialize the wave detection\X\par
+\Y\B\X27:Initialize the wave detection\X\par
 \fi
 
 \M{18}
@@ -222,7 +222,7 @@ Rather than burning loops, waiting for something to happen for 16 ms, the sleep
 mode is used.
 The specific type of `sleep' is `idle'.
 Interrupts are used to wake it.
-\Y\B\X27:Configure to wake upon interrupt\X\par
+\Y\B\X28:Configure to wake upon interrupt\X\par
 \fi
 
 \M{20}
@@ -270,12 +270,16 @@ ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{ARM}){}$;\C{ at this time the only
 way to disarm is a power cycle }\2\6
 ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{NOWAVES}){}$;\SHC{reset int flag }\6
 \4${}\}{}$\SHC{ end if NOWAVES }\2\6
-\X28:Hold-off all interrupts\X $\}{}$\SHC{ end for }\6
+\X29:Hold-off all interrupts\X $\}{}$\SHC{ end for }\6
 \&{return} \T{0};\SHC{ it's the right thing to do! }\6
 $\}{}$\SHC{ end main }\par
 \fi
 
-\M{23}\B\X23:Initialize pin outputs and inputs\X${}\E{}$\6
+\N{1}{23}These are the supporting routines and configuration blocks.
+
+\fi
+
+\M{24}\B\X24:Initialize pin outputs and inputs\X${}\E{}$\6
 ${}\{{}$\C{ set the led port direction; This is pin \#1 }\1\6
 ${}\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{DDB1}){}$;\C{ set the siren port
 direction }\6
@@ -287,7 +291,7 @@ ${}\.{GIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCIE});{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{24}
+\M{25}
 Siren function will arm after a 10 minute power-loss; that is,
 the Trinket is running for a full 10 minutes without seeing AC at pin \#2.
 Once armed, siren will chirp for 100 ms at a 5 second interval,
@@ -317,7 +321,7 @@ ${}\.{PORTB}\K\\{state}\?\.{PORTB}\OR(\T{1}\LL\.{PORTB0}):\.{PORTB}\AND\CM(%
 \4${}\}{}$\2\par
 \fi
 
-\M{25}
+\M{26}
 A timer is needed to to encompase some number of waves so it can clearly
 discern on from off.
 The timer is also interrupt based. The timer is set to interrupt at overflow.
@@ -327,7 +331,7 @@ When the timer interrupt does occour, the LED is switched off.
 Comparator Interrupts are counted and at 15 the timer is reset and the LED is
 switched on.
 
-\Y\B\4\X25:Initialize the no-wave timer\X${}\E{}$\6
+\Y\B\4\X26:Initialize the no-wave timer\X${}\E{}$\6
 ${}\{{}$\SHC{set a very long prescale of 16384 counts }\1\6
 ${}\.{TCCR1}\K((\T{1}\LL\.{CS10})\OR(\T{1}\LL\.{CS11})\OR(\T{1}\LL\.{CS12})\OR(%
 \T{1}\LL\.{CS13})){}$;\C{ Timer/counter 1 f\_overflow interrupt enable }\6
@@ -336,7 +340,7 @@ ${}\.{TIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{TOIE1});{}$\6
 \Q7.
 \U16.\fi
 
-\M{26}
+\M{27}
 The ideal input AN1 (PB1), is connected to the LED in the Trinket!
 That's not a big issue since the ADC's MUX may be used.
 That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are
@@ -362,7 +366,7 @@ There is no need for toggle, and falling is selected by simply setting ACIS1.
 
 
 To enable this interrupt, set the ACIE bit of register ACSR.
-\Y\B\4\X26:Initialize the wave detection\X${}\E{}$\6
+\Y\B\4\X27:Initialize the wave detection\X${}\E{}$\6
 ${}\{{}$\C{ Setting bit ACME of port ADCSRB to enable the MUX input ADC1 }\1\6
 ${}\.{ADCSRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACME}){}$;\C{ ADC1 is set by setting
 bit MUX0 of register ADMUX }\6
@@ -378,18 +382,18 @@ ${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{27}
+\M{28}
 Setting these bits configure sleep\_mode() to go to ``idle''.
 Idle allows the counters and comparator to continue during sleep.
 
-\Y\B\4\X27:Configure to wake upon interrupt\X${}\E{}$\6
+\Y\B\4\X28:Configure to wake upon interrupt\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM1});{}$\6
 ${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM0});{}$\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{28}\B\X28:Hold-off all interrupts\X${}\E{}$\6
+\M{29}\B\X29:Hold-off all interrupts\X${}\E{}$\6
 ${}\{{}$\C{ Disable the analog comparator interrupt }\1\6
 ${}\.{ACSR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ACIE});{}$\6
 \\{\_delay\_us}(\.{WAVEHOLDOFFTIME});\C{ Enable the analog comparator interrupt
@@ -399,7 +403,7 @@ ${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});{}$\6
 \Q8.
 \U22.\fi
 
-\M{29}
+\M{30}
 This is the ISR for the main timer.
 When this overflows it generaly means the ASE has been off for a while.
 \Y\B\C{ Timer ISR }\6
@@ -409,7 +413,7 @@ ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{NOWAVES});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{30}
+\M{31}
 The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
 register but the vector ANA\_COMP\_vect is the simpler way.
 
@@ -420,7 +424,7 @@ ${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{WAVES});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{31}
+\M{32}
 This ISR responds to the Clear button at pin \#3 or PB3.
 \Y\B\C{ Clear Button ISR }\6
 \.{ISR}(\\{PCINT0\_vect})\1\1\2\2\6
@@ -430,7 +434,7 @@ ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ARM});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{32}
+\M{33}
 Done
 
 \fi
