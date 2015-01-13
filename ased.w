@@ -56,7 +56,7 @@ The Siren port is marked \#0, and is PB0.
 Clear is on \#3, PB3 on the chip.
 
 
-@ |"F_CPU"| is used only to convey the Trinket clock to delay.h. 
+@ |"F_CPU"| is used only to convey the Trinket clock rate to delay.h. 
 @d F_CPU 8000000UL
 
 
@@ -67,13 +67,14 @@ Clear is on \#3, PB3 on the chip.
 @d CLEAR 0 
 
 
-@ Bit flags within f\_state. 
+@ Bit flags within the f\_state bit array defined later. 
 @d NOWAVES 2 // no ASE detected for some time 
 @d WAVES   1 // ASE detected
 @d ARM     0 // ARM for Alarm
 
-@ |"WAVETHRESHOLD"| is maybe about 250 ms. Don't take too long or timer will overflow. 
-This is the number of waves before considering the ASE `on'. Range to 255.
+@ |"WAVETHRESHOLD"| is the number of waves, that AC must be present to consider it `ON'.
+15 counts, or waves,  maybe about 250 ms.
+Range is 0 to 255 but don't take too long or the timer will nowave timer overflow. 
 @d WAVETHRESHOLD 15
 
 
@@ -83,7 +84,7 @@ The math goes: $0.5 seconds *(8e6 /over 16384) = 244.14$.
 Then to overflow, $256-244 = 12$, thus leaving 500 ms until time-out, unless it is reset.
 @d NOWAVETIME 12     // preset for the timer counter. Range to 255 */
 
-@  This is the hold-off time in us for wave detection. This value is used by the |"\_delay\_us()"| function here |@<Hold-off all interrupts...@>|.
+@  This is the hold-off time in $\mu$s for wave detection. This value is used by the |"_delay_us()"| function here |@<Hold-off all interrupts...@>|.
 @d WAVEHOLDOFFTIME 100 // Range to 255
 
 @ Alarm arm delay in ``nowave'' counts of whose size is defined by |"NOWAVETIME"|.
@@ -181,11 +182,14 @@ It could be that the NOWAVES timer overflowed, since there have been no sinewave
 It could be that the siren was so annoying that the operator pressed the ``Clear'' button. 
 
 In the case of a ``Clear'' event, its ISR does the work and program flow passes over most of this.
-If a wave was detected, it's counted. Once the counter reaches zero, the light and, if armed, the siren are activated. Also, the timer for nowave is reset; after all, there is a wave. Each time the interrupt is processed, its flag is reset for use in the next pass.  
+If a wave is detected, it's counted. Once the counter reaches zero, the light and, if armed, the siren are activated. Also, the timer for nowave is reset; after all, there is a wave. Each time the interrupt is processed, its flag is reset for use in the next pass.  
  
-If the nowave timer overflows, almost tho opposit happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finaly, the flag is reset, as before.
+If the nowave timer overflows, almost the opposit happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finaly, the flag is reset, as before.
+
+As a side note, while activities could have been perfomed within the ISRs, it doesn't make it much simpler and actually makes the code somewhat larger.
+My guess is that optimization doesn't work well across ISRs. 
  
-The ISR would have left a flag set in f\_state.
+The ISR would have left a flag set in |f_state|.
 Let's see which one by testing each possibility and acting on it.
 @c
   if(f_state & (1<<WAVES)) 
@@ -234,7 +238,7 @@ return 0; // it's the right thing to do!
 
 @
 This is the ISR for the main timer.
-When this overflows it generaly means the ASE has been off for a while. 
+When this overflows it generaly means the ASE has been off for as long as it took |TCINT1| to overflow from it's start at |NOWAVETIME|. 
 @c
 /* Timer ISR */
 ISR(TIMER1_OVF_vect)
@@ -243,9 +247,7 @@ ISR(TIMER1_OVF_vect)
 }
 
 @
-The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
-register but the vector ANA\_COMP\_vect is the simpler way.
-
+This vector responds to falling comparator events resulting from ac AC signal at the MUX input.
 @c
 /* Comparator ISR */
 ISR(ANA_COMP_vect)
