@@ -14,7 +14,7 @@
 #define WAVETHRESHOLD 15 \
  \
 
-#define TIMESTART 12 \
+#define NOWAVETIME 12 \
 
 #define WAVEHOLDOFFTIME 100 \
 
@@ -24,11 +24,11 @@
 #define CHIRPPERIOD 200 \
 
 /*14:*/
-#line 124 "./ased.w"
+#line 120 "./ased.w"
 
 
 /*11:*/
-#line 101 "./ased.w"
+#line 97 "./ased.w"
 
 # include <avr/io.h>  
 # include <util/delay.h>  
@@ -37,33 +37,33 @@
 # include <stdlib.h> 
 
 /*:11*/
-#line 126 "./ased.w"
+#line 122 "./ased.w"
 
 /*12:*/
-#line 108 "./ased.w"
+#line 104 "./ased.w"
 
 void ledcntl(char state);
 void sirencntl(char state);
 void chirp(char state);
 
 /*:12*/
-#line 127 "./ased.w"
+#line 123 "./ased.w"
 
 /*13:*/
-#line 117 "./ased.w"
+#line 113 "./ased.w"
 
 volatile unsigned char f_state= 0;
 
 
 /*:13*/
-#line 128 "./ased.w"
+#line 124 "./ased.w"
 
 
 int main(void)
 {
 
-/*24:*/
-#line 227 "./ased.w"
+/*27:*/
+#line 261 "./ased.w"
 
 {
 
@@ -76,22 +76,21 @@ PCMSK|= (1<<PCINT3);
 GIMSK|= (1<<PCIE);
 }
 
-
-/*:24*/
-#line 133 "./ased.w"
+/*:27*/
+#line 129 "./ased.w"
 
 
 /*:14*//*15:*/
-#line 138 "./ased.w"
+#line 134 "./ased.w"
 
 
 ledcntl(ON);
 
 /*:15*//*16:*/
-#line 144 "./ased.w"
+#line 140 "./ased.w"
 
-/*26:*/
-#line 278 "./ased.w"
+/*29:*/
+#line 311 "./ased.w"
 
 {
 
@@ -102,15 +101,15 @@ TIMSK|= (1<<TOIE1);
 }
 
 
-/*:26*/
-#line 145 "./ased.w"
+/*:29*/
+#line 141 "./ased.w"
 
 
 /*:16*//*17:*/
-#line 153 "./ased.w"
+#line 149 "./ased.w"
 
-/*27:*/
-#line 311 "./ased.w"
+/*30:*/
+#line 344 "./ased.w"
 
 {
 
@@ -127,32 +126,31 @@ ACSR|= (1<<ACIS1);
 ACSR|= (1<<ACIE);
 }
 
-/*:27*/
-#line 154 "./ased.w"
+/*:30*/
+#line 150 "./ased.w"
 
 
 /*:17*//*18:*/
-#line 159 "./ased.w"
+#line 155 "./ased.w"
 
 sei();
 /*:18*//*19:*/
-#line 165 "./ased.w"
+#line 161 "./ased.w"
 
-/*28:*/
-#line 331 "./ased.w"
+/*31:*/
+#line 364 "./ased.w"
 
 {
 MCUCR&= ~(1<<SM1);
 MCUCR&= ~(1<<SM0);
 }
 
-
-/*:28*/
-#line 166 "./ased.w"
+/*:31*/
+#line 162 "./ased.w"
 
 
 /*:19*//*20:*/
-#line 171 "./ased.w"
+#line 167 "./ased.w"
 
 for(;;)
 {
@@ -160,12 +158,12 @@ static unsigned char waveless= WAVETHRESHOLD;
 static unsigned int armwait= ARMTHRESHOLD;
 
 /*:20*//*21:*/
-#line 179 "./ased.w"
+#line 175 "./ased.w"
 
 sleep_mode();
 
 /*:21*//*22:*/
-#line 187 "./ased.w"
+#line 194 "./ased.w"
 
 if(f_state&(1<<WAVES))
 {
@@ -177,7 +175,7 @@ ledcntl(ON);
 
 if(f_state&(1<<ARM))chirp(ON);
 
-TCNT1= TIMESTART;
+TCNT1= NOWAVETIME;
 }
 
 f_state&= ~(1<<WAVES);
@@ -186,20 +184,17 @@ f_state&= ~(1<<WAVES);
 else if(f_state&(1<<NOWAVES))
 {
 ledcntl(OFF);
+chirp(OFF);
 waveless= WAVETHRESHOLD;
 
-chirp(OFF);
-
 armwait= (armwait)?armwait-1:0;
-
 if(!armwait&&~f_state&(1<<ARM))f_state|= (1<<ARM);
-
 
 f_state&= ~(1<<NOWAVES);
 }
 
-/*29:*/
-#line 338 "./ased.w"
+/*32:*/
+#line 370 "./ased.w"
 
 {
 
@@ -209,16 +204,46 @@ _delay_us(WAVEHOLDOFFTIME);
 ACSR|= (1<<ACIE);
 }
 
-/*:29*/
-#line 219 "./ased.w"
+
+/*:32*/
+#line 223 "./ased.w"
 
 }
 
 return 0;
 }
 
-/*:22*//*25:*/
-#line 248 "./ased.w"
+
+/*:22*//*23:*/
+#line 233 "./ased.w"
+
+
+ISR(TIMER1_OVF_vect)
+{
+f_state|= (1<<NOWAVES);
+}
+
+/*:23*//*24:*/
+#line 242 "./ased.w"
+
+
+ISR(ANA_COMP_vect)
+{
+f_state|= (1<<WAVES);
+}
+
+/*:24*//*25:*/
+#line 251 "./ased.w"
+
+
+ISR(PCINT0_vect)
+{
+if(PORTB&(1<<PORTB3))
+f_state&= ~(1<<ARM);
+}
+
+/*:25*//*28:*/
+#line 281 "./ased.w"
 
 void chirp(char state)
 {
@@ -241,33 +266,4 @@ void sirencntl(char state)
 PORTB= state?PORTB|(1<<PORTB0):PORTB&~(1<<PORTB0);
 }
 
-/*:25*//*30:*/
-#line 350 "./ased.w"
-
-
-ISR(TIMER1_OVF_vect)
-{
-f_state|= (1<<NOWAVES);
-}
-
-
-/*:30*//*31:*/
-#line 362 "./ased.w"
-
-
-ISR(ANA_COMP_vect)
-{
-f_state|= (1<<WAVES);
-}
-
-
-/*:31*//*32:*/
-#line 372 "./ased.w"
-
-
-ISR(PCINT0_vect)
-{
-if(PORTB&(1<<PORTB3))
-f_state&= ~(1<<ARM);
-}
-/*:32*/
+/*:28*/

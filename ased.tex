@@ -7,7 +7,7 @@
 
 
 \N{1}{1}Introduction. This is the firmware portion of an Ancillary Service
-Electric Detector or ASED, written by Bjorn Burton.
+Electric Detector or ASED.
 
 With my  emergency generator connected through an interlocked load-center, it's
 hard to tell when the \PB{\\{Ancillary}\\{Service}} has been restored.
@@ -68,6 +68,14 @@ input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
 
+
+\fi
+
+\N{1}{2}Implementation and Specification.
+Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45,
+ATtiny85 Datasheet'' Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM
+EDT).
+
 In use, the AC signal goes to the pin  marked \#2 on the Trinket, PB2 on the
 chip, and in the Atmel  datasheet.
 The LED port is marked \#1, which is PB1.
@@ -77,20 +85,8 @@ Clear is on \#3, PB3 on the chip.
 
 \fi
 
-\N{1}{2}Implementation and Specification.
-Extensive use was made of the datasheet, Atmel, “Atmel ATtiny25, ATtiny45,
-ATtiny85 Datasheet” Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM
-EDT).
-
-In use, the AC signal goes to the pin marked \#2 on the Trinket.
-The LED port is marked \#1.
-The Siren port is marked \#0.
-Clear, should it be implemented, is on \#3.
-
-
-\fi
-
-\M{3}\PB{\.{"F\_CPU"}} is used only to convey the Trinket clock to delay.h.
+\M{3}\PB{\.{"F\_CPU"}} is used only to convey the Trinket clock rate to
+delay.h.
 \Y\B\4\D$\.{F\_CPU}$ \5
 \T{8000000\$U\$L}\par
 \fi
@@ -106,7 +102,7 @@ Clear, should it be implemented, is on \#3.
 \T{0}\par
 \fi
 
-\M{5}Bit flags within f\_state.
+\M{5}Bit flags within the f\_state bit array defined later.
 \Y\B\4\D$\.{NOWAVES}$ \5
 \T{2}\SHC{ no ASE detected for some time }\par
 \B\4\D$\.{WAVES}$ \5
@@ -115,33 +111,35 @@ Clear, should it be implemented, is on \#3.
 \T{0}\SHC{ ARM for Alarm }\par
 \fi
 
-\M{6}\PB{\.{"WAVETHRESHOLD"}} is maybe about 250 ms. Don't take too long or
-timer will overflow.
-This is the number of waves before considering the ASE `on'. Range to 255.
+\M{6}\PB{\.{"WAVETHRESHOLD"}} is the number of waves, that AC must be present
+to consider it `ON'.
+15 counts, or waves,  maybe about 250 ms.
+Range is 0 to 255 but don't take too long or the timer will nowave timer
+overflow.
 \Y\B\4\D$\.{WAVETHRESHOLD}$ \5
 \T{15}\par
 \fi
 
-\M{7}The prescaler is set to clk/16484 at \PB{$\X26:Initialize the no-wave
+\M{7}The prescaler is set to clk/16484 at \PB{$\X29:Initialize the no-wave
 timer\X$}.
-\PB{\.{"TIMESTART"}} is the timer preset so that overflow happens in about
+\PB{\.{"NOWAVETIME"}} is the timer preset so that overflow happens in about
 500~ms.
 The math goes: $0.5 seconds *(8e6 /over 16384) = 244.14$.
 Then to overflow, $256-244 = 12$, thus leaving 500 ms until time-out, unless it
 is reset.
-\Y\B\4\D$\.{TIMESTART}$ \5
+\Y\B\4\D$\.{NOWAVETIME}$ \5
 \T{12}\SHC{ preset for the timer counter. Range to 255 */ }\par
 \fi
 
-\M{8} This is the hold-off time in us for wave detection. This value is used by
-the \PB{\.{"\\\_delay\\\_us()"}} function here \PB{$\X29:Hold-off all
+\M{8} This is the hold-off time in $\mu$s for wave detection. This value is
+used by the \PB{\.{"\_delay\_us()"}} function here \PB{$\X32:Hold-off all
 interrupts\X$}.
 \Y\B\4\D$\.{WAVEHOLDOFFTIME}$ \5
 \T{100}\SHC{ Range to 255 }\par
 \fi
 
 \M{9}Alarm arm delay in ``nowave'' counts of whose size is defined by \PB{%
-\.{"TIMESTART"}}.
+\.{"NOWAVETIME"}}.
 \Y\B\4\D$\.{ARMTHRESHOLD}$ \5
 \T{1200}\SHC{ Range to 65535 }\par
 \fi
@@ -184,7 +182,7 @@ Additionaly, we need the clear button to wake the device through an interrupt.
 \Y\B\X11:Include\X\6
 \X12:Prototypes\X\6
 \X13:Global variables\X\6
-\&{int} \\{main}(\&{void})\1\1 $\{$ \X24:Initialize pin outputs and inputs\X\par
+\&{int} \\{main}(\&{void})\1\1 $\{$ \X27:Initialize pin outputs and inputs\X\par
 \fi
 
 \M{15}
@@ -197,7 +195,7 @@ opposed to the converse.
 
 \M{16}
 Here the timer and comparator are setup.
-\Y\B\X26:Initialize the no-wave timer\X\par
+\Y\B\X29:Initialize the no-wave timer\X\par
 \fi
 
 \M{17}
@@ -208,7 +206,7 @@ spend a lot of time cliped.
 We just need to know when the signal changes.
 The inbuilt comparator seems like the right choice, for now.
 
-\Y\B\X27:Initialize the wave detection\X\par
+\Y\B\X30:Initialize the wave detection\X\par
 \fi
 
 \M{18}
@@ -222,7 +220,7 @@ Rather than burning loops, waiting for something to happen for 16 ms, the sleep
 mode is used.
 The specific type of `sleep' is `idle'.
 Interrupts are used to wake it.
-\Y\B\X28:Configure to wake upon interrupt\X\par
+\Y\B\X31:Configure to wake upon interrupt\X\par
 \fi
 
 \M{20}
@@ -240,9 +238,29 @@ Now we wait in ``idle'' for any interrupt event.
 \fi
 
 \M{22}
-If execution arrives here, some interrupt has been detected!
+If execution arrives here, some interrupt has been detected.
+It could be that a sinewave was detected.
+It could be that the NOWAVES timer overflowed, since there have been no
+sinewaves for an extended period.
+It could be that the siren was so annoying that the operator pressed the
+``Clear'' button.
 
-The ISR would have left a flag set in f\_state.
+In the case of a ``Clear'' event, its ISR does the work and program flow passes
+over most of this.
+If a wave is detected, it's counted. Once the counter reaches zero, the light
+and, if armed, the siren are activated. Also, the timer for nowave is reset;
+after all, there is a wave. Each time the interrupt is processed, its flag is
+reset for use in the next pass.
+
+If the nowave timer overflows, almost the opposit happens. The LED and siren
+are turned off. The waveless counter is reset. After some passes, the siren
+will be armed. Finaly, the flag is reset, as before.
+
+As a side note, while activities could have been perfomed within the ISRs, it
+doesn't make it much simpler and actually makes the code somewhat larger.
+My guess is that optimization doesn't work well across ISRs.
+
+The ISR would have left a flag set in \PB{\\{f\_state}}.
 Let's see which one by testing each possibility and acting on it.
 \Y\B\&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{WAVES})){}$\5
 ${}\{{}$\1\6
@@ -253,7 +271,7 @@ ${}\{{}$\1\6
 \\{ledcntl}(\.{ON});\6
 \&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{ARM})){}$\1\5
 \\{chirp}(\.{ON});\SHC{  annunciate }\2\6
-${}\.{TCNT1}\K\.{TIMESTART}{}$;\SHC{ reset the timer }\6
+${}\.{TCNT1}\K\.{NOWAVETIME}{}$;\SHC{ reset the nowave timer }\6
 \4${}\}{}$\SHC{ end if waveless }\2\6
 ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{WAVES}){}$;\SHC{reset int flag
 since actions are complete }\6
@@ -261,25 +279,55 @@ since actions are complete }\6
 \&{else} \&{if} ${}(\\{f\_state}\AND(\T{1}\LL\.{NOWAVES})){}$\5
 ${}\{{}$\1\6
 \\{ledcntl}(\.{OFF});\6
-${}\\{waveless}\K\.{WAVETHRESHOLD};{}$\6
 \\{chirp}(\.{OFF});\SHC{ ASE dropped, stop alarm chirp }\6
+${}\\{waveless}\K\.{WAVETHRESHOLD}{}$;\SHC{ waveless again }\6
 ${}\\{armwait}\K(\\{armwait})\?\\{armwait}-\T{1}:\T{0}{}$;\SHC{ countdown to 0,
 but not lower }\6
 \&{if} ${}(\R\\{armwait}\W\CM\\{f\_state}\AND(\T{1}\LL\.{ARM})){}$\1\5
-${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{ARM}){}$;\C{ at this time the only
-way to disarm is a power cycle }\2\6
+${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{ARM});{}$\2\6
 ${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{NOWAVES}){}$;\SHC{reset int flag }\6
 \4${}\}{}$\SHC{ end if NOWAVES }\2\6
-\X29:Hold-off all interrupts\X $\}{}$\SHC{ end for }\6
+\X32:Hold-off all interrupts\X $\}{}$\SHC{ end for }\6
 \&{return} \T{0};\SHC{ it's the right thing to do! }\6
 $\}{}$\SHC{ end main }\par
 \fi
 
-\N{1}{23}These are the supporting routines and configuration blocks.
+\M{23}
+This is the ISR for the main timer.
+When this overflows it generaly means the ASE has been off for as long as it
+took \PB{\.{TCINT1}} to overflow from it's start at \PB{\.{NOWAVETIME}}.
+\Y\B\C{ Timer ISR }\6
+\.{ISR}(\\{TIMER1\_OVF\_vect})\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{NOWAVES});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{24}
+This vector responds to falling comparator events resulting from ac AC signal
+at the MUX input.
+\Y\B\C{ Comparator ISR }\6
+\.{ISR}(\\{ANA\_COMP\_vect})\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{WAVES});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{25}
+This ISR responds to the Clear button at pin \#3 or PB3.
+\Y\B\C{ Clear Button ISR }\6
+\.{ISR}(\\{PCINT0\_vect})\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\.{PORTB}\AND(\T{1}\LL\.{PORTB3})){}$\1\5
+${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ARM});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{26}These are the supporting routines and configuration blocks.
 
 \fi
 
-\M{24}\B\X24:Initialize pin outputs and inputs\X${}\E{}$\6
+\M{27}\B\X27:Initialize pin outputs and inputs\X${}\E{}$\6
 ${}\{{}$\C{ set the led port direction; This is pin \#1 }\1\6
 ${}\.{DDRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{DDB1}){}$;\C{ set the siren port
 direction }\6
@@ -291,9 +339,9 @@ ${}\.{GIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{PCIE});{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{25}
+\M{28}
 Siren function will arm after a 10 minute power-loss; that is,
-the Trinket is running for a full 10 minutes without seeing AC at pin \#2.
+the Trinket is running for about 10 minutes without seeing AC at pin \#2.
 Once armed, siren will chirp for 100 ms at a 5 second interval,
 only while AC is present. In fact it is called with each AC cycle interrupt so
 that \PB{\.{CHIRPLENGTH}} and \PB{\.{CHIRPPERIOD}} are defined a multiples of
@@ -321,7 +369,7 @@ ${}\.{PORTB}\K\\{state}\?\.{PORTB}\OR(\T{1}\LL\.{PORTB0}):\.{PORTB}\AND\CM(%
 \4${}\}{}$\2\par
 \fi
 
-\M{26}
+\M{29}
 A timer is needed to to encompase some number of waves so it can clearly
 discern on from off.
 The timer is also interrupt based. The timer is set to interrupt at overflow.
@@ -331,7 +379,7 @@ When the timer interrupt does occour, the LED is switched off.
 Comparator Interrupts are counted and at 15 the timer is reset and the LED is
 switched on.
 
-\Y\B\4\X26:Initialize the no-wave timer\X${}\E{}$\6
+\Y\B\4\X29:Initialize the no-wave timer\X${}\E{}$\6
 ${}\{{}$\SHC{set a very long prescale of 16384 counts }\1\6
 ${}\.{TCCR1}\K((\T{1}\LL\.{CS10})\OR(\T{1}\LL\.{CS11})\OR(\T{1}\LL\.{CS12})\OR(%
 \T{1}\LL\.{CS13})){}$;\C{ Timer/counter 1 f\_overflow interrupt enable }\6
@@ -340,7 +388,7 @@ ${}\.{TIMSK}\MRL{{\OR}{\K}}(\T{1}\LL\.{TOIE1});{}$\6
 \Q7.
 \U16.\fi
 
-\M{27}
+\M{30}
 The ideal input AN1 (PB1), is connected to the LED in the Trinket!
 That's not a big issue since the ADC's MUX may be used.
 That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are
@@ -366,7 +414,7 @@ There is no need for toggle, and falling is selected by simply setting ACIS1.
 
 
 To enable this interrupt, set the ACIE bit of register ACSR.
-\Y\B\4\X27:Initialize the wave detection\X${}\E{}$\6
+\Y\B\4\X30:Initialize the wave detection\X${}\E{}$\6
 ${}\{{}$\C{ Setting bit ACME of port ADCSRB to enable the MUX input ADC1 }\1\6
 ${}\.{ADCSRB}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACME}){}$;\C{ ADC1 is set by setting
 bit MUX0 of register ADMUX }\6
@@ -382,18 +430,18 @@ ${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{28}
+\M{31}
 Setting these bits configure sleep\_mode() to go to ``idle''.
 Idle allows the counters and comparator to continue during sleep.
 
-\Y\B\4\X28:Configure to wake upon interrupt\X${}\E{}$\6
+\Y\B\4\X31:Configure to wake upon interrupt\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM1});{}$\6
 ${}\.{MCUCR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{SM0});{}$\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{29}\B\X29:Hold-off all interrupts\X${}\E{}$\6
+\M{32}\B\X32:Hold-off all interrupts\X${}\E{}$\6
 ${}\{{}$\C{ Disable the analog comparator interrupt }\1\6
 ${}\.{ACSR}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ACIE});{}$\6
 \\{\_delay\_us}(\.{WAVEHOLDOFFTIME});\C{ Enable the analog comparator interrupt
@@ -402,37 +450,6 @@ ${}\.{ACSR}\MRL{{\OR}{\K}}(\T{1}\LL\.{ACIE});{}$\6
 \4${}\}{}$\2\par
 \Q8.
 \U22.\fi
-
-\M{30}
-This is the ISR for the main timer.
-When this overflows it generaly means the ASE has been off for a while.
-\Y\B\C{ Timer ISR }\6
-\.{ISR}(\\{TIMER1\_OVF\_vect})\1\1\2\2\6
-${}\{{}$\1\6
-${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{NOWAVES});{}$\6
-\4${}\}{}$\2\par
-\fi
-
-\M{31}
-The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
-register but the vector ANA\_COMP\_vect is the simpler way.
-
-\Y\B\C{ Comparator ISR }\6
-\.{ISR}(\\{ANA\_COMP\_vect})\1\1\2\2\6
-${}\{{}$\1\6
-${}\\{f\_state}\MRL{{\OR}{\K}}(\T{1}\LL\.{WAVES});{}$\6
-\4${}\}{}$\2\par
-\fi
-
-\M{32}
-This ISR responds to the Clear button at pin \#3 or PB3.
-\Y\B\C{ Clear Button ISR }\6
-\.{ISR}(\\{PCINT0\_vect})\1\1\2\2\6
-${}\{{}$\1\6
-\&{if} ${}(\.{PORTB}\AND(\T{1}\LL\.{PORTB3})){}$\1\5
-${}\\{f\_state}\MRL{\AND{\K}}\CM(\T{1}\LL\.{ARM});{}$\2\6
-\4${}\}{}$\2\par
-\fi
 
 \M{33}
 Done
