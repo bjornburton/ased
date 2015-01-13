@@ -1,0 +1,19 @@
+\I\X31:Configure to wake upon interrupt\X
+\U19.
+\I\X13:Global variables\X
+\U14.
+\I\X32:Hold-off all interrupts\X
+\Q8.
+\U22.
+\I\X11:Include\X
+\U14.
+\I\X27:Initialize pin outputs and inputs\X
+\U14.
+\I\X29:Initialize the no-wave timer\X
+\Q7.
+\U16.
+\I\X30:Initialize the wave detection\X
+\U17.
+\I\X12:Prototypes\X
+\U14.
+

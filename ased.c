@@ -1,193 +1,269 @@
-/**************************************
-ASED
-Version 1.1.0
-Ancillary Service Electric Detector
-2015-01-01
-Bjorn Burton
+#define F_CPU 8000000UL \
+ \
 
-Just for fun.
-**************************************/
+#define ON 1
+#define OFF 0
+#define SET 1
+#define CLEAR 0 \
+ \
 
-# include "ased.h"
+#define NOWAVES 2
+#define WAVES 1
+#define ARM 0 \
+
+#define WAVETHRESHOLD 15 \
+ \
+
+#define NOWAVETIME 12 \
+
+#define WAVEHOLDOFFTIME 100 \
+
+#define ARMTHRESHOLD 1200 \
+
+#define CHIRPLENGTH 7
+#define CHIRPPERIOD 200 \
+
+/*14:*/
+#line 120 "./ased.w"
+
+
+/*11:*/
+#line 97 "./ased.w"
+
+# include <avr/io.h>  
+# include <util/delay.h>  
+# include <avr/interrupt.h>  
+# include <avr/sleep.h>  
+# include <stdlib.h> 
+
+/*:11*/
+#line 122 "./ased.w"
+
+/*12:*/
+#line 104 "./ased.w"
+
+void ledcntl(char state);
+void sirencntl(char state);
+void chirp(char state);
+
+/*:12*/
+#line 123 "./ased.w"
+
+/*13:*/
+#line 113 "./ased.w"
+
+volatile unsigned char f_state= 0;
+
+
+/*:13*/
+#line 124 "./ased.w"
 
 
 int main(void)
 {
- /* set the led port direction */
-  DDRB |= (1<<LED_RED_DD);
 
- /* set the siren port direction */
-  DDRB |= (1<<SIREN_DD);
+/*27:*/
+#line 261 "./ased.w"
 
- /* enable pin change interrupt for clear-button*/
-  PCMSK |= (1<<PCINT3);
-
- /* General interrupt Mask register for clear-button*/
-  GIMSK |= (1<<PCIE);
-
-
- /* turn the led on */
-  ledcntl(ON); 
-
- /* set up the nowave timer */
-  initnowavetimer();
-
- /* set up the wave-event comparator */
-  initwavedetector();
-
- /* Global Int Enable */
-  sei();
-
- /* configure sleep_mode() to go to "idle". Idle allows
-    the counters and comparator to continue during sleep. */
-  MCUCR &= ~(1<<SM1); 
-  MCUCR &= ~(1<<SM0);
-
- for (;;) // forever
-  {
-   static unsigned char nowaves = WAVETHRESHOLD;
-   static unsigned int armwait = ARMTHRESHOLD;  
-      
-  /* hold-off to minimise noise susceptibilty */  
-  waveholdoff(); 
-
-  /* now we wait in idle for any interrupt event */
-  sleep_mode();
-
-  /* some interrupt was detected! Let's see which one */
-  if(f_state & (1<<WAVES)) 
-    {
-     nowaves = (nowaves)?nowaves-1:0;
-
-     if(!nowaves) // ancilliary electric service restored
-       {
-        ledcntl(ON);
-
-        if(f_state & (1<<ARM))
-           chirp(ON);
- 
-        TCNT1 = TIMESTART;  // reset the timer
-       }
-
-     f_state &= ~(1<<WAVES); //reset int flag
-    
-     }
-     else if(f_state & (1<<NOWAVES))
-         {
-          ledcntl(OFF); 
-          nowaves = WAVETHRESHOLD; 
-
-          chirp(OFF);  // ASE dropped, stop alarm chirp
-          
-          armwait = (armwait)?armwait-1:0;
-
-          if(!armwait && ~f_state & (1<<ARM) )
-              f_state |= (1<<ARM);
-     /* at this time the only way to disarm is a power cycle */
-
-          f_state &= ~(1<<NOWAVES); //reset int flag
-          }
-  }  
-
-return 0; // it's the right thing to do!
-}
-
-
-/* Alarm Pulsing function */
-void chirp(char state)
 {
-static unsigned char count = CHIRPLENGTH;
 
- count = (count)?count-1:CHIRPPERIOD;
- 
- if(count > CHIRPLENGTH || state == OFF)
-    sirencntl(OFF);
-  else
-    sirencntl(ON);
+DDRB|= (1<<DDB1);
 
+DDRB|= (1<<DDB0);
+
+PCMSK|= (1<<PCINT3);
+
+GIMSK|= (1<<PCIE);
 }
 
+/*:27*/
+#line 129 "./ased.w"
 
-/* simple led control */
-void ledcntl(char state)
+
+/*:14*//*15:*/
+#line 134 "./ased.w"
+
+
+ledcntl(ON);
+
+/*:15*//*16:*/
+#line 140 "./ased.w"
+
+/*29:*/
+#line 311 "./ased.w"
+
 {
-  PORTB = state ? PORTB | (1<<LED_RED) : PORTB & ~(1<<LED_RED);
+
+TCCR1= ((1<<CS10)|(1<<CS11)|(1<<CS12)|(1<<CS13));
+
+
+TIMSK|= (1<<TOIE1);
 }
 
-/* simple siren control */
-void sirencntl(char state)
+
+/*:29*/
+#line 141 "./ased.w"
+
+
+/*:16*//*17:*/
+#line 149 "./ased.w"
+
+/*30:*/
+#line 344 "./ased.w"
+
 {
-  PORTB = state ? PORTB | (1<<SIREN) : PORTB & ~(1<<SIREN);
+
+ADCSRB|= (1<<ACME);
+
+ADMUX|= (1<<MUX0);
+
+DIDR0|= ((1<<AIN1D)|(1<<AIN0D));
+
+ACSR|= (1<<ACBG);
+
+ACSR|= (1<<ACIS1);
+
+ACSR|= (1<<ACIE);
 }
 
+/*:30*/
+#line 150 "./ased.w"
 
-/* configure the no-wave timer */
-void initnowavetimer(void)
+
+/*:17*//*18:*/
+#line 155 "./ased.w"
+
+sei();
+/*:18*//*19:*/
+#line 161 "./ased.w"
+
+/*31:*/
+#line 364 "./ased.w"
+
 {
- /* set a very long prescal of 16384 counts */
- TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
-
- /* Timer/counter 1 f_overflow interupt enable */
- TIMSK |= (1<<TOIE1);
-
+MCUCR&= ~(1<<SM1);
+MCUCR&= ~(1<<SM0);
 }
 
+/*:31*/
+#line 162 "./ased.w"
 
-/* configure the the wave detection comparator */
-void initwavedetector(void)
+
+/*:19*//*20:*/
+#line 167 "./ased.w"
+
+for(;;)
 {
- /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
- ADCSRB |= (1<<ACME);
+static unsigned char waveless= WAVETHRESHOLD;
+static unsigned int armwait= ARMTHRESHOLD;
 
- /* ADC1 is set by setting bit MUX0 of register ADMUX */
- ADMUX |= (1<<MUX0);
+/*:20*//*21:*/
+#line 175 "./ased.w"
 
- /* Disable digital inputs to save power */
- DIDR0  |= ((1<<AIN1D)|(1<<AIN0D));
- 
- /* Connect the + input to the band-gap reference */
- ACSR |= (1<<ACBG);
- 
- /* Trigger on falling edge only */
- ACSR |= (1<<ACIS1);
- 
- /* Enable the analog comparator interrupt */
- ACSR |= (1<<ACIE);
+sleep_mode();
 
-}
+/*:21*//*22:*/
+#line 194 "./ased.w"
 
-/* Wave detection Hold-Off or debounce */
-void waveholdoff()
+if(f_state&(1<<WAVES))
 {
- /* Disable the analog comparator interrupt */
- ACSR &= ~(1<<ACIE);
+waveless= (waveless)?waveless-1:0;
 
- _delay_us(WAVEHOLDOFFTIME);
- 
- /* Enable the analog comparator interrupt */
- ACSR |= (1<<ACIE);
+if(!waveless)
+{
+ledcntl(ON);
 
+if(f_state&(1<<ARM))chirp(ON);
+
+TCNT1= NOWAVETIME;
+}
+
+f_state&= ~(1<<WAVES);
+
+}
+else if(f_state&(1<<NOWAVES))
+{
+ledcntl(OFF);
+chirp(OFF);
+waveless= WAVETHRESHOLD;
+
+armwait= (armwait)?armwait-1:0;
+if(!armwait&&~f_state&(1<<ARM))f_state|= (1<<ARM);
+
+f_state&= ~(1<<NOWAVES);
+}
+
+/*32:*/
+#line 370 "./ased.w"
+
+{
+
+ACSR&= ~(1<<ACIE);
+_delay_us(WAVEHOLDOFFTIME);
+
+ACSR|= (1<<ACIE);
 }
 
 
+/*:32*/
+#line 223 "./ased.w"
 
-/* Timer ISR */
+}
+
+return 0;
+}
+
+
+/*:22*//*23:*/
+#line 233 "./ased.w"
+
+
 ISR(TIMER1_OVF_vect)
 {
-  f_state |= (1<<NOWAVES); 
+f_state|= (1<<NOWAVES);
 }
 
-/* Comparator ISR */
+/*:23*//*24:*/
+#line 242 "./ased.w"
+
+
 ISR(ANA_COMP_vect)
 {
- f_state |= (1<<WAVES);
+f_state|= (1<<WAVES);
 }
 
-/* Clear Button ISR */
+/*:24*//*25:*/
+#line 251 "./ased.w"
+
+
 ISR(PCINT0_vect)
 {
- if(PORTB & (1<<ARMCLEAR))
-    f_state &= ~(1<<ARM);
+if(PORTB&(1<<PORTB3))
+f_state&= ~(1<<ARM);
+}
+
+/*:25*//*28:*/
+#line 281 "./ased.w"
+
+void chirp(char state)
+{
+static unsigned char count= CHIRPLENGTH;
+
+count= (count)?count-1:CHIRPPERIOD;
+
+if(count> CHIRPLENGTH||state==OFF)sirencntl(OFF);
+else sirencntl(ON);
+}
+
+void ledcntl(char state)
+{
+PORTB= state?PORTB|(1<<PORTB1):PORTB&~(1<<PORTB1);
 }
 
 
+void sirencntl(char state)
+{
+PORTB= state?PORTB|(1<<PORTB0):PORTB&~(1<<PORTB0);
+}
+
+/*:28*/

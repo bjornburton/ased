@@ -21,26 +21,38 @@ EFUSE:= efuse:w:0xFF:m
 
 # Apps and Flags
 PROGSWFLAGS:= -c $(PROGHW) -p $(BOARD)
-CC:= avr-gcc 
-CFLAGS:=  -std=c99 -g -mmcu=$(MCU) -Wall -Os -pedantic
-CONV:=avr-objcopy
+CC       := avr-gcc 
+TANGLE   := ctangle
+WEAVE    := cweave
+TEX      := pdftex
+CFLAGS   :=  -std=c99 -g -mmcu=$(MCU) -Wall -Os -pedantic
+CONV     :=avr-objcopy
 CONVFLAGS:= -j .text -j .data -O ihex
-LIBS:=
+LIBS     :=
 
 # Build filenames
-HEADERS:= $(TARGET).h
-OBJECTS:= $(TARGET).o
-HEX    := $(TARGET).hex
-ELF    := $(TARGET).elf
-SOURCES:= $(TARGET).c
+HEADERS := $(TARGET).h
+OBJECTS := $(TARGET).o
+HEX     := $(TARGET).hex
+ELF     := $(TARGET).elf
+CSOURCES:= $(TARGET).c
+WEB     := $(TARGET).w
+DOC     := $(TARGET).pdf
+TEXSRC  := $(TARGET).tex
+
 
 # The usual make stuff
 default: $(HEX)
 elf: $(ELF)
 all: default
 
-$(OBJECTS): $(SOURCES)
-	$(CC) -c $(CFLAGS) $(SOURCES)
+$(CSOURCES): $(WEB)
+	$(TANGLE) $(WEB)
+	$(WEAVE) $(WEB)
+	$(TEX) $(TEXSRC) 
+
+$(OBJECTS): $(CSOURCES)
+	$(CC) -c $(CFLAGS) $(CSOURCES)
 
 $(ELF): $(OBJECTS)
 	$(CC) $(LIBS) $(OBJECTS) $(CFLAGS) -o $(ELF)
@@ -52,6 +64,8 @@ $(HEX): $(ELF)
 clean:
 	-rm -f $(OBJECTS)
 	-rm -f $(ELF)
+	-rm -f $(TEXSRC)
+	-rm -f $(CSOURCES)
 	
 install:
 	$(PROGSW) $(PROGSWFLAGS) -U flash:w:$(HEX)
