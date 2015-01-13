@@ -78,15 +78,15 @@ This is the number of waves before considering the ASE `on'. Range to 255.
 
 
 @ The prescaler is set to clk/16484 at |@<Initialize the no-wave timer...@>|. 
-|"TIMESTART"| is the timer preset so that overflow happens in about 500~ms.
+|"NOWAVETIME"| is the timer preset so that overflow happens in about 500~ms.
 The math goes: $0.5 seconds *(8e6 /over 16384) = 244.14$.
 Then to overflow, $256-244 = 12$, thus leaving 500 ms until time-out, unless it is reset.
-@d TIMESTART 12     // preset for the timer counter. Range to 255 */
+@d NOWAVETIME 12     // preset for the timer counter. Range to 255 */
 
 @  This is the hold-off time in us for wave detection. This value is used by the |"\_delay\_us()"| function here |@<Hold-off all interrupts...@>|.
 @d WAVEHOLDOFFTIME 100 // Range to 255
 
-@ Alarm arm delay in ``nowave'' counts of whose size is defined by |"TIMESTART"|.
+@ Alarm arm delay in ``nowave'' counts of whose size is defined by |"NOWAVETIME"|.
 @d ARMTHRESHOLD 1200 // Range to 65535
 
 @ Chirp parameters for alarm. These unit are of period $1 \over f$.
@@ -175,8 +175,16 @@ Now we wait in ``idle'' for any interrupt event.
   sleep_mode();
 
 @
-If execution arrives here, some interrupt has been detected!
+If execution arrives here, some interrupt has been detected.
+It could be that a sinewave was detected.
+It could be that the NOWAVES timer overflowed, since there have been no sinewaves for an extended period.
+It could be that the siren was so annoying that the operator pressed the ``Clear'' button. 
 
+In the case of a ``Clear'' event, its ISR does the work and program flow passes over most of this.
+If a wave was detected, it's counted. Once the counter reaches zero, the light and, if armed, the siren are activated. Also, the timer for nowave is reset; after all, there is a wave. Each time the interrupt is processed, its flag is reset for use in the next pass.  
+ 
+If the nowave timer overflows, almost tho opposit happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finaly, the flag is reset, as before.
+ 
 The ISR would have left a flag set in f\_state.
 Let's see which one by testing each possibility and acting on it.
 @c
@@ -190,7 +198,7 @@ Let's see which one by testing each possibility and acting on it.
 
         if(f_state & (1<<ARM)) chirp(ON); //  annunciate
  
-        TCNT1 = TIMESTART;  // reset the timer
+        TCNT1 = NOWAVETIME;  // reset the nowave timer
        } // end if waveless 
 
      f_state &= ~(1<<WAVES); //reset int flag since actions are complete
@@ -199,14 +207,11 @@ Let's see which one by testing each possibility and acting on it.
      else if(f_state & (1<<NOWAVES))
          {
           ledcntl(OFF); 
-          waveless = WAVETHRESHOLD; 
-
           chirp(OFF);  // ASE dropped, stop alarm chirp
+          waveless = WAVETHRESHOLD; // waveless again 
           
           armwait = (armwait)?armwait-1:0; // countdown to 0, but not lower
-
           if(!armwait && ~f_state & (1<<ARM) )  f_state |= (1<<ARM);
-     /* at this time the only way to disarm is a power cycle */
 
           f_state &= ~(1<<NOWAVES); //reset int flag
           } // end if NOWAVES
