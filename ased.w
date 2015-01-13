@@ -227,15 +227,6 @@ return 0; // it's the right thing to do!
 } // end main
 
 
-@ @<Hold-off all interrupts...@>=
-{
- /* Disable the analog comparator interrupt */
- ACSR &= ~(1<<ACIE);
- _delay_us(WAVEHOLDOFFTIME);
- /* Enable the analog comparator interrupt */
- ACSR |= (1<<ACIE);
-}
-
 @
 This is the ISR for the main timer.
 When this overflows it generaly means the ASE has been off for as long as it took |TCINT1| to overflow from it's start at |NOWAVETIME|. 
@@ -375,6 +366,16 @@ Idle allows the counters and comparator to continue during sleep.
   MCUCR &= ~(1<<SM1); 
   MCUCR &= ~(1<<SM0);
 }
+
+@ @<Hold-off all interrupts...@>=
+{
+ /* Disable the analog comparator interrupt */
+ ACSR &= ~(1<<ACIE);
+ _delay_us(WAVEHOLDOFFTIME);
+ /* Enable the analog comparator interrupt */
+ ACSR |= (1<<ACIE);
+}
+
 
 @
 Done
