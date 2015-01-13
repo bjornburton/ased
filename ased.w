@@ -272,7 +272,7 @@ ISR(PCINT0_vect)
 
 @
 Siren function will arm after a 10 minute power-loss; that is,
-the Trinket is running for a full 10 minutes without seeing AC at pin \#2.
+the Trinket is running for about 10 minutes without seeing AC at pin \#2.
 Once armed, siren will chirp for 100 ms at a 5 second interval,
 only while AC is present. In fact it is called with each AC cycle interrupt so
 that |CHIRPLENGTH| and |CHIRPPERIOD| are defined a multiples of ${1 \over Hz}$.
