@@ -217,6 +217,47 @@ Let's see which one by testing each possibility and acting on it.
 return 0; // it's the right thing to do!
 } // end main
 
+
+@ @<Hold-off all interrupts...@>=
+{
+ /* Disable the analog comparator interrupt */
+ ACSR &= ~(1<<ACIE);
+ _delay_us(WAVEHOLDOFFTIME);
+ /* Enable the analog comparator interrupt */
+ ACSR |= (1<<ACIE);
+}
+
+@
+This is the ISR for the main timer.
+When this overflows it generaly means the ASE has been off for a while. 
+@c
+/* Timer ISR */
+ISR(TIMER1_OVF_vect)
+{
+  f_state |= (1<<NOWAVES); 
+}
+
+@
+The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
+register but the vector ANA\_COMP\_vect is the simpler way.
+
+@c
+/* Comparator ISR */
+ISR(ANA_COMP_vect)
+{
+ f_state |= (1<<WAVES);
+}
+
+@
+This ISR responds to the Clear button at pin \#3 or PB3.
+@c
+/* Clear Button ISR */
+ISR(PCINT0_vect)
+{
+ if(PORTB & (1<<PORTB3))
+    f_state &= ~(1<<ARM);
+}
+
 @* These are the supporting routines and configuration blocks.  
 
 @ @<Initialize pin outputs...@>=
@@ -230,7 +271,6 @@ return 0; // it's the right thing to do!
  /* General interrupt Mask register for clear-button*/
   GIMSK |= (1<<PCIE);
 }
-
 
 @
 Siren function will arm after a 10 minute power-loss; that is,
@@ -329,48 +369,6 @@ Idle allows the counters and comparator to continue during sleep.
   MCUCR &= ~(1<<SM0);
 }
 
-
-@ @<Hold-off all interrupts...@>=
-{
- /* Disable the analog comparator interrupt */
- ACSR &= ~(1<<ACIE);
- _delay_us(WAVEHOLDOFFTIME);
- /* Enable the analog comparator interrupt */
- ACSR |= (1<<ACIE);
-}
-
-@
-This is the ISR for the main timer.
-When this overflows it generaly means the ASE has been off for a while. 
-@c
-/* Timer ISR */
-ISR(TIMER1_OVF_vect)
-{
-  f_state |= (1<<NOWAVES); 
-}
-
-
-@
-The event can be checked by inspecting (then clearing) the ACI bit of the ACSR
-register but the vector ANA\_COMP\_vect is the simpler way.
-
-@c
-/* Comparator ISR */
-ISR(ANA_COMP_vect)
-{
- f_state |= (1<<WAVES);
-}
-
-
-@
-This ISR responds to the Clear button at pin \#3 or PB3.
-@c
-/* Clear Button ISR */
-ISR(PCINT0_vect)
-{
- if(PORTB & (1<<PORTB3))
-    f_state &= ~(1<<ARM);
-}
 @
 Done
 
