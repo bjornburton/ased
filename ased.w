@@ -4,7 +4,7 @@
 \nocon % omit table of contents
 \datethis % print date on listing
 
-@* Introduction. This is the firmware portion of an Ancillary Service Electric Detector or ASED, written by Bjorn Burton.
+@* Introduction. This is the firmware portion of an Ancillary Service Electric Detector or ASED.
 
 With my  emergency generator connected through an interlocked load-center, it's hard to tell when the |Ancillary Service| has been restored.
 The neighbor's lights offer a clue at night, but aren't reliable.
@@ -46,19 +46,14 @@ input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
 
+
+@* Implementation and Specification.
+Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtiny85 Datasheet'' Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM EDT).
+
 In use, the AC signal goes to the pin  marked \#2 on the Trinket, PB2 on the chip, and in the Atmel  datasheet. 
 The LED port is marked \#1, which is PB1.
 The Siren port is marked \#0, and is PB0.
 Clear is on \#3, PB3 on the chip.
-
-
-@* Implementation and Specification.
-Extensive use was made of the datasheet, Atmel, “Atmel ATtiny25, ATtiny45, ATtiny85 Datasheet” Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM EDT).
- 
-In use, the AC signal goes to the pin marked \#2 on the Trinket.
-The LED port is marked \#1.
-The Siren port is marked \#0.
-Clear, should it be implemented, is on \#3.
 
 
 @ |"F_CPU"| is used only to convey the Trinket clock to delay.h. 
