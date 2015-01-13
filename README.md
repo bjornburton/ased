@@ -14,7 +14,7 @@ It will also compile in the Arduino IDE as a "Sketch."
 This is the firmware portion of an Ancillary Service Electric Detector or ASED.
 
 With my emergency generator connected through an interlocked load-center,
-it's hard to tell when the |Ancillary Service| has been restored.
+it's hard to tell when the Ancillary Service has been restored.
 The neighbor's lights offer a clue at night, but aren't reliable.
 Switching back to Main, from the genny, requires shutting  everything down
 for a moment. It would be good to know if main, or Ancillary Service, is live
@@ -28,8 +28,8 @@ live lines and, ideally, providing some form of isolation.
 
 The obvious solution is to have a high-impedance connection very near to the
 source. A small capacitance would do. Simple capacitive coupling can be had
-with a ``gimmick''; a technique used since the 1920s. This may be several turns
-of THHN around the large-gage insulated incomming line. Since the voltage is
+with a "gimmick"; a technique used since the 1920s. This may be several turns
+of THHN around the large-gage insulated incoming line. Since the voltage is
 with respect to neutral, and neutral is bonded to ground, just the one wire is
 needed to get a ``sample''. No need to mess with live conductors, just coupling
 to the electric field through the insulation already present. Installation
