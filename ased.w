@@ -6,19 +6,19 @@
 
 @* Introduction. This is the firmware portion of an Ancillary Service Electric Detector or ASED.
 
-With my  emergency generator connected through an interlocked load-center, it's hard to tell when the |Ancillary Service| has been restored.
+With my emergency generator connected through an interlocked load-center, it's hard to tell when the |Ancillary Service| has been restored.
 The neighbor's lights offer a clue at night, but aren't reliable.
-Switching back to Main, from the genny, requiers shutting  everything down for a moment.
+Switching back to Main, from the genny, requires shutting  everything down for a moment.
 It would be good to know if main, or Ancillary Service, is live before switching back to it.
 
 The obvious method is to measure the voltage at the main-breaker's input, using a meter.
 One safety concern is that it's not breaker-protected making for a massive fault-current, should insulation be breached or the circuit shorted.
-Also, installation of a simple meter is somewhat involved, having to tap into live lines and, idealy, providing some form of isolation.
+Also, installation of a simple meter is somewhat involved, having to tap into live lines and, ideally, providing some form of isolation.
 
 The obvious solution is to have a high-impedance connection very near to the source.
 A small capacitance would do.
 Simple capacitive coupling can be had with a ``gimmick''; a technique used since the 1920s.
-This may be several turns of THHN around the large-gage insulated incomming line.
+This may be several turns of THHN around the large-gage insulated incoming line.
 Since the voltage is with respect to neutral, and neutral is bonded to ground,
 just the one wire is needed to get a ``sample''.
 No need to mess with live conductors, just coupling to the electric field through the insulation already present.
@@ -26,7 +26,7 @@ Installation still has some risk, but much less.
 
 This is still not Double insulated, so whatever gizmo is connected should provide an additional level of protection, but it's better than a copper connection.
 
-With access to this signal, a circuit and be built to detect the difference between having AC and not having AC,  providing a signal to indicate that state.
+With access to this signal, a circuit can be built to detect the difference between having AC and not having AC, providing a signal to indicate that state.
 The signal provided to the generator-operator could be a lamp or buzzer.
 
 Looking at some numbers, the line-voltage is $\pm$ 170~V peak, with respect to ground.
@@ -116,7 +116,7 @@ volatile unsigned char f_state = 0;
 
 @
 Here is |main|. Atmel pins default as simple inputs so the first thing is to configure to use LED, Siren pins as outputs.
-Additionaly, we need the clear button to wake the device through an interrupt.
+Additionally, we need the clear button to wake the device through an interrupt.
 @c
 
 @< Include @>@;
@@ -141,8 +141,8 @@ Here the timer and comparator are setup.
   @<Initialize the no-wave timer@>
 
 @ 
-The Trinket runs at relativly speedy 8 MHz so the slow 60 Hz signal is no issue.
-One could use the ADC but that doesn't make too much sense as the input may spend a lot of time cliped.
+The Trinket runs at relatively speedy 8 MHz so the slow 60 Hz signal is no issue.
+One could use the ADC but that doesn't make too much sense as the input may spend a lot of time clipped.
 We just need to know when the signal changes.
 The inbuilt comparator seems like the right choice, for now.
 
@@ -151,7 +151,7 @@ The inbuilt comparator seems like the right choice, for now.
 
 @
 Of course, any interrupt function requires that bit ``Global Interrupt Enable''
-is set; usualy done through calling sei().
+is set; usually done through calling sei().
 @c
   sei();
 @  
@@ -162,7 +162,7 @@ Interrupts are used to wake it.
 @<Configure to wake upon interrupt...@>
 
 @
-This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event.
+This is the loop that does the work. It should spend most of its time in |sleep_mode|, cumming out at each interrupt event.
 
 @c
  for (;;) // forever
@@ -184,9 +184,9 @@ It could be that the siren was so annoying that the operator pressed the ``Clear
 In the case of a ``Clear'' event, its ISR does the work and program flow passes over most of this.
 If a wave is detected, it's counted. Once the counter reaches zero, the light and, if armed, the siren are activated. Also, the timer for nowave is reset; after all, there is a wave. Each time the interrupt is processed, its flag is reset for use in the next pass.  
  
-If the nowave timer overflows, almost the opposit happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finaly, the flag is reset, as before.
+If the nowave timer overflows, almost the opposite happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finally, the flag is reset, as before.
 
-As a side note, while activities could have been perfomed within the ISRs, it doesn't make it much simpler and actually makes the code somewhat larger.
+As a side note, while activities could have been performed within the ISRs, it doesn't make it much simpler and actually makes the code somewhat larger.
 My guess is that optimization doesn't work well across ISRs. 
  
 The ISR would have left a flag set in |f_state|.
@@ -229,7 +229,7 @@ return 0; // it's the right thing to do!
 
 @
 This is the ISR for the main timer.
-When this overflows it generaly means the ASE has been off for as long as it took |TCINT1| to overflow from it's start at |NOWAVETIME|. 
+When this overflows it generally means the ASE has been off for as long as it took |TCINT1| to overflow from it's start at |NOWAVETIME|. 
 @c
 /* Timer ISR */
 ISR(TIMER1_OVF_vect)
@@ -301,11 +301,11 @@ void sirencntl(char state)
 }
 
 @
-A timer is needed to to encompase some number of waves so it can clearly discern on from off.
+A timer is needed to to encompass some number of waves so it can clearly discern on from off.
 The timer is also interrupt based. The timer is set to interrupt at overflow.
 It could overflow within about $1 \over 2$ second.
 Over the course of that time, 25 to 30 comparator interrupts are expected.
-When the timer interrupt does occour, the LED is switched off.
+When the timer interrupt does occur, the LED is switched off.
 Comparator Interrupts are counted and at 15 the timer is reset and the LED is switched on.
 
 @<Initialize the no-wave timer...@>=
