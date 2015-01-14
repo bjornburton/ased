@@ -16,7 +16,7 @@ One safety concern is that it's not breaker-protected making for a massive fault
 Also, installation of a simple meter is somewhat involved, having to tap into live lines and, ideally, providing some form of isolation.
 
 The obvious solution is to have a high-impedance connection very near to the source.
-A small capacitance would do.
+A small capacitance could do, with a high impedance device..
 Simple capacitive coupling can be had with a ``gimmick''; a technique used since the 1920s.
 This may be several turns of THHN around the large-gage insulated incoming line.
 Since the voltage is with respect to neutral, and neutral is bonded to ground,
@@ -24,10 +24,11 @@ just the one wire is needed to get a ``sample''.
 No need to mess with live conductors, just coupling to the electric field through the insulation already present.
 Installation still has some risk, but much less.
 
-This is still not Double insulated, so whatever gizmo is connected should provide an additional level of protection, but it's better than a copper connection.
+This is still now Double insulated, so whatever gizmo is connected should provide an additional level of protection, but it's better than a copper connection. Another layer of insulation could be had with a film capacitor. 
+A Y2 film capacitor with 100 or 200 pf could be used.
 
-With access to this signal, a circuit can be built to detect the difference between having AC and not having AC, providing a signal to indicate that state.
-The signal provided to the generator-operator could be a lamp or buzzer.
+With access to this signal, a circuit can be built to detect the difference between having AC and not having AC.
+The indication provided to the generator-operator could be a lamp or buzzer.
 
 Looking at some numbers, the line-voltage is $\pm$ 170~V peak, with respect to ground.
 The peaks will be about 8.3~ms apart, in North America.
@@ -48,12 +49,17 @@ a red LED on-board.
 
 
 @* Implementation and Specification.
-Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtiny85 Datasheet'' Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM EDT).
+In use, the AC signal goes to the pin marked \#2 on the Trinket, PB2 on the chip, and in the Atmel  datasheet. 
+The LED port is marked \#1, which is PB1. This pin goes positive to turn the LED on.
+The Siren port is marked \#0, and is PB0. This pin goes positve to turn the siren on.
+The ``Clear'' input  is on \#3, PB3 on the chip. This pin should be pushed to the 5V return (supply negative) to clear the siren.
 
-In use, the AC signal goes to the pin  marked \#2 on the Trinket, PB2 on the chip, and in the Atmel  datasheet. 
-The LED port is marked \#1, which is PB1.
-The Siren port is marked \#0, and is PB0.
-Clear is on \#3, PB3 on the chip.
+The LED will light immediately whenever AC is detected. It will turn off when the ``no wave'' timer times out.
+If armed, the siren will start when |"WAVETHRESHOLD"| sinewaves are detected.
+The siren is armed when the nowave timer expires |"ARMTHRESHOLD"| times.
+The siren is stopped and disarmed with either the ``clear'' button or power-cycle.
+
+Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtiny85 Datasheet'' Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM EDT).
 
 
 @ |"F_CPU"| is used only to convey the Trinket clock rate to delay.h. 
@@ -113,9 +119,8 @@ f\_state is just a simple bit-flag array that keeps track what has been handled.
 @<Global var...@>=
 volatile unsigned char f_state = 0; 
 
-
 @
-Here is |main|. Atmel pins default as simple inputs so the first thing is to configure to use LED, Siren pins as outputs.
+Here is |main|. Atmel pins default as simple inputs so the first thing is to configure to use LED and Siren pins as outputs.
 Additionally, we need the clear button to wake the device through an interrupt.
 @c
 
@@ -132,11 +137,10 @@ int main(void)
 The LED is set, meaning `on', assuming that there is an AC signal.
 The thought is that it's better to say that there is AC, when there isn't, as opposed to the converse.
 @c
- /* turn the led on */
   ledcntl(ON); 
 
 @
-Here the timer and comparator are setup.
+Here the timer is setup.
 @c
   @<Initialize the no-wave timer@>
 
@@ -186,7 +190,7 @@ If a wave is detected, it's counted. Once the counter reaches zero, the light an
  
 If the nowave timer overflows, almost the opposite happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finally, the flag is reset, as before.
 
-As a side note, while activities could have been performed within the ISRs, it doesn't make it much simpler and actually makes the code somewhat larger.
+As a side note, while activities could have been performed within the ISRs, it doesn't make it much simpler and actually makes the resultant binary somewhat larger.
 My guess is that optimization doesn't work well across ISRs. 
  
 The ISR would have left a flag set in |f_state|.
@@ -294,27 +298,27 @@ void ledcntl(char state)
   PORTB = state ? PORTB | (1<<PORTB1) : PORTB & ~(1<<PORTB1);
 }
 
-/* simple siren control */
 void sirencntl(char state)
 {
   PORTB = state ? PORTB | (1<<PORTB0) : PORTB & ~(1<<PORTB0);
 }
 
 @
-A timer is needed to to encompass some number of waves so it can clearly discern on from off.
-The timer is also interrupt based. The timer is set to interrupt at overflow.
+A timer is needed to to encompass some number of waves so it can clearly discern on from off. For this we use Timer 1.
+The timer is also interrupt based. The timer is set to interrupt at overflow using |TCCR1|.
 It could overflow within about $1 \over 2$ second.
 Over the course of that time, 25 to 30 comparator interrupts are expected.
 When the timer interrupt does occur, the LED is switched off.
-Comparator Interrupts are counted and at 15 the timer is reset and the LED is switched on.
+Comparator Interrupts are counted and at |WAVETHRESHOLD| the timer is reset and the LED is switched on.
+
+First a very long prescale of 16384 counts is set by setting certain bits in |TCCR1|.
 
 @<Initialize the no-wave timer...@>=
 {
-//set a very long prescale of 16384 counts
- TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13));
+ TCCR1 = ((1<<CS10) | (1<<CS11) | (1<<CS12) | (1<<CS13)); //Prescale
 
- /* Timer/counter 1 f\_overflow interrupt enable */
- TIMSK |= (1<<TOIE1);
+ TIMSK |= (1<<TOIE1);  /* Timer 1 f\_overflow interrupt enable */
+
 }
 
 
@@ -324,6 +328,7 @@ That's not a big issue since the ADC's MUX may be used.
 That MUX may address PB2, PB3, PB4 or PB5. Of those, PB2, PB3 and PB4 are available.
 Since PB3 and PB4 are use for USB, PB2 makes sense here.
 This is marked \#2 on the Trinket.
+
 PB2 connects the the MUX's ADC1.
 Use of the MUX is selected by setting bit ACME of port ADCSRB. ADC1 is set by setting bit MUX0 of register ADMUX 
 
@@ -343,18 +348,13 @@ There is no need for toggle, and falling is selected by simply setting ACIS1.
 To enable this interrupt, set the ACIE bit of register ACSR.
 @<Initialize the wave detection...@>=
 {
- /* Setting bit ACME of port ADCSRB to enable the MUX input ADC1 */
- ADCSRB |= (1<<ACME);
- /* ADC1 is set by setting bit MUX0 of register ADMUX */
- ADMUX |= (1<<MUX0);
-  /* Disable digital inputs to save power */
- DIDR0  |= ((1<<AIN1D)|(1<<AIN0D));
- /* Connect the + input to the band-gap reference */
- ACSR |= (1<<ACBG);
- /* Trigger on falling edge only */
- ACSR |= (1<<ACIS1);
- /* Enable the analog comparator interrupt */
- ACSR |= (1<<ACIE);
+ ADCSRB |= (1<<ACME); //enable the MUX input ADC1 
+
+ ADMUX |= (1<<MUX0); //set bit MUX0 of register ADMUX 
+ DIDR0  |= ((1<<AIN1D)|(1<<AIN0D)); // Disable digital inputs
+ ACSR |= (1<<ACBG); //Connect the + input to the band-gap reference 
+ ACSR |= (1<<ACIS1); // Trigger on falling edge only
+ ACSR |= (1<<ACIE); // Enable the analog comparator interrupt */
 }
 
 @

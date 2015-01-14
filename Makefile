@@ -66,6 +66,7 @@ clean:
 	-rm -f $(ELF)
 	-rm -f $(TEXSRC)
 	-rm -f $(CSOURCES)
+	-rm -f $(CSOURCES)
 	
 install:
 	$(PROGSW) $(PROGSWFLAGS) -U flash:w:$(HEX)
