@@ -60,6 +60,11 @@ The siren is armed when the nowave timer expires |"ARMTHRESHOLD"| times.
 The siren is stopped and disarmed with either the ``clear'' button or power-cycle.
 
 Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtiny85 Datasheet'' Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM EDT).
+@c
+@< Include @>@;
+@< Prototypes @>@;
+@< Global variables @>@;
+
 
 
 @ |"F_CPU"| is used to convey the Trinket clock rate. 
@@ -84,14 +89,8 @@ Range is 0 to 255 but don't take too long or the nowave timer will will overflow
 @d WAVETHRESHOLD 15 // range maybe to 20, with a 500 ms nowave time 
 
 
-@ The prescaler is set to clk/16484 at |@<Initialize the no-wave timer...@>|. 
-|"nowavecount"| is the timer preset so that overflow of the 8-bit counter happens in about 500~ms.
-The math goes: $\lfloor{0.5 seconds \times (8 \times 10^6 \over 16384}\rfloor = 244$.
-Then, the remainder is $256-244 = 12$, thus leaving 244 counts or about 500 ms until time-out, unless it's reset.
+@ |"NOWAVETIME"| is the time allowed by the nowave timer to be waveless before arming the siren.
 @d NOWAVETIME 500U  // preset ms for the timer counter. This is close to maximum 
-
-@c
-const unsigned char nowavecount = (2^8)-((NOWAVETIME/1000U)*(F_CPU/16384U)); 
 
 
 @  This is the hold-off time in $\mu$s for wave detection. This value is used by the |"_delay_us()"| function here |@<Hold-off all interrupts...@>|.
@@ -110,31 +109,28 @@ const unsigned char nowavecount = (2^8)-((NOWAVETIME/1000U)*(F_CPU/16384U));
 # include <avr/interrupt.h> // have need of an interrupt
 # include <avr/sleep.h> // have need of sleep
 # include <stdlib.h>
+# include <stdint.h>
 
 
 @ @<Prototypes@>=
-void ledcntl(char state); // LED ON and LED OFF
-void sirencntl(char state); // alarm siren control
-void chirp(char state); // alarm siren modulation
+void ledcntl(uint8_t state); // LED ON and LED OFF
+void sirencntl(uint8_t state); // alarm siren control
+void chirp(uint8_t state); // alarm siren modulation
 
 @
 The f\_state global variable needs the type qualifier `volatile' or optimization may eliminate it.
 f\_state is just a simple bit-flag array that keeps track what has been handled. 
 
 @<Global var...@>=
-volatile unsigned char f_state = 0; 
+volatile uint8_t f_state = 0; 
 
 @
 Here is |main|. Atmel pins default as simple inputs so the first thing is to configure to use LED and Siren pins as outputs.
 Additionally, we need the clear button to wake the device through an interrupt.
 @c
 
-@< Include @>@;
-@< Prototypes @>@;
-@< Global variables @>@;
-
 int main(void)
-{
+{@#
 
 @<Initialize pin outputs and inputs@>
 
@@ -147,7 +143,16 @@ The thought is that it's better to say that there is AC, when there isn't, as op
 @
 Here the timer is setup.
 @c
-  @<Initialize the no-wave timer@>
+@<Initialize the no-wave timer@>
+
+@ The prescaler is now set to clk/16484. 
+|"nowavecount"| is the timer preset so that overflow of the 8-bit counter happens in about 500~ms.
+With |"F_CPU"| at 8~MHz, the math goes: $\lfloor{0.5 seconds \times (8 \times 10^6 \over 16384}\rfloor = 244$.
+Then, the remainder is $256-244 = 12$, thus leaving 244 counts or about 500 ms until time-out, unless it's reset.
+
+@c
+const int8_t nowavecount = (2^8)-((NOWAVETIME/1000U)*(F_CPU/16384U)); 
+
 
 @ 
 The Trinket runs at relatively speedy 8 MHz so the slow 60 Hz signal is no issue.
@@ -171,13 +176,13 @@ Interrupts are used to wake it.
 @<Configure to wake upon interrupt...@>
 
 @
-This is the loop that does the work. It should spend most of its time in |sleep_mode|, cumming out at each interrupt event.
+This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event.
 
 @c
  for (;;) // forever
-  {
-   static unsigned char waveless = WAVETHRESHOLD;
-   static unsigned int armwait = ARMTHRESHOLD;  
+  {@#
+   static uint8_t waveless = WAVETHRESHOLD;
+   static uint16_t armwait = ARMTHRESHOLD;  
       
 @
 Now we wait in ``idle'' for any interrupt event.
@@ -288,9 +293,9 @@ that |CHIRPLENGTH| and |CHIRPPERIOD| are defined a multiples of ${1 \over Hz}$.
 It may be disarmed, stopping the chirp, by pressing a button or power-cycle.
 
 @c
-void chirp(char state)
+void chirp(uint8_t state)
 {
-static unsigned char count = CHIRPLENGTH;
+static uint8_t count = CHIRPLENGTH;
 
  count = (count)?count-1:CHIRPPERIOD;
  
@@ -298,12 +303,12 @@ static unsigned char count = CHIRPLENGTH;
    else  sirencntl(ON);
 }
 
-void ledcntl(char state)
+void ledcntl(uint8_t state)
 {
   PORTB = state ? PORTB | (1<<PORTB1) : PORTB & ~(1<<PORTB1);
 }
 
-void sirencntl(char state)
+void sirencntl(uint8_t state)
 {
   PORTB = state ? PORTB | (1<<PORTB0) : PORTB & ~(1<<PORTB0);
 }
