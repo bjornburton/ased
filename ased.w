@@ -8,7 +8,7 @@
 
 With my emergency generator connected through an interlocked load-center, it's hard to tell when the |Ancillary Service| has been restored.
 The neighbor's lights offer a clue at night, but aren't reliable.
-Switching back to Main, from the genny, requires shutting  everything down for a moment.
+Switching back to Main, from the genny, requires shutting everything off for a moment.
 It would be good to know if main, or Ancillary Service, is live before switching back to it.
 
 The obvious method is to measure the voltage at the main-breaker's input, using a meter.
@@ -42,7 +42,7 @@ I had seven Adafruit Industry Trinkets just laying around. They use the Atmel
 ATTINY85 processor. The analog inputs are about 100~M$\Omega$. Not great, but
 I think it should be good enough. If we can muster 1~pf of gimmick, we will
 have $\ {1 \over 2 \pi f_c} $ of $X_c$. Ohms law indicates
-$100e6 {170 \over  {(2pi*60*1e-12)^{-1} + 100e6)} } = 6.16 $ volts peak, ignoring
+$100e6 {170 \over  {(2pi \times 60\times 1e-12)^{-1} + 100 \times 10^6)} } = 6.16 $ volts peak, ignoring
 input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
@@ -51,18 +51,23 @@ a red LED on-board.
 @* Implementation and Specification.
 In use, the AC signal goes to the pin marked \#2 on the Trinket, PB2 on the chip, and in the Atmel  datasheet. 
 The LED port is marked \#1, which is PB1. This pin goes positive to turn the LED on.
-The Siren port is marked \#0, and is PB0. This pin goes positve to turn the siren on.
+The Siren port is marked \#0, and is PB0. This pin goes positive to turn the siren on.
 The ``Clear'' input  is on \#3, PB3 on the chip. This pin should be pushed to the 5V return (supply negative) to clear the siren.
 
 The LED will light immediately whenever AC is detected. It will turn off when the ``no wave'' timer times out.
-If armed, the siren will start when |"WAVETHRESHOLD"| sinewaves are detected.
+If armed, the siren will start when |"WAVETHRESHOLD"| count of sinewaves are detected.
 The siren is armed when the nowave timer expires |"ARMTHRESHOLD"| times.
 The siren is stopped and disarmed with either the ``clear'' button or power-cycle.
 
 Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtiny85 Datasheet'' Rev. 2586Q–AVR–08/2013 (Tue 06 Aug 2013 03:19:12 PM EDT).
+@c
+@< Include @>@;
+@< Prototypes @>@;
+@< Global variables @>@;
 
 
-@ |"F_CPU"| is used only to convey the Trinket clock rate to delay.h. 
+
+@ |"F_CPU"| is used to convey the Trinket clock rate. 
 @d F_CPU 8000000UL
 
 
@@ -79,24 +84,22 @@ Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtin
 @d ARM     0 // ARM for Alarm
 
 @ |"WAVETHRESHOLD"| is the number of waves, that AC must be present to consider it `ON'.
-15 counts, or waves,  maybe about 250 ms.
-Range is 0 to 255 but don't take too long or the timer will nowave timer overflow. 
-@d WAVETHRESHOLD 15
+15 counts, or waves; about 250 ms at 60 Hz.
+Range is 0 to 255 but don't take too long or the nowave timer will will overflow. Keep in mind that neither clock nor genny frequency is perfect.  
+@d WAVETHRESHOLD 15 // range maybe to 20, with a 500 ms nowave time 
 
 
-@ The prescaler is set to clk/16484 at |@<Initialize the no-wave timer...@>|. 
-|"NOWAVETIME"| is the timer preset so that overflow happens in about 500~ms.
-The math goes: $0.5 seconds *(8e6 /over 16384) = 244.14$.
-Then to overflow, $256-244 = 12$, thus leaving 500 ms until time-out, unless it is reset.
-@d NOWAVETIME 12     // preset for the timer counter. Range to 255 */
+@ |"NOWAVETIME"| is the time allowed by the nowave timer to be waveless before arming the siren.
+@d NOWAVETIME 500U  // preset ms for the timer counter. This is close to maximum 
+
 
 @  This is the hold-off time in $\mu$s for wave detection. This value is used by the |"_delay_us()"| function here |@<Hold-off all interrupts...@>|.
 @d WAVEHOLDOFFTIME 100 // Range to 255
 
-@ Alarm arm delay in ``nowave'' counts of whose size is defined by |"NOWAVETIME"|.
+@ Alarm arm delay in ``nowave'' counts of whose size is defined by time |"NOWAVETIME"|.
 @d ARMTHRESHOLD 1200 // Range to 65535
 
-@ Chirp parameters for alarm. These unit are of period $1 \over f$.
+@ Chirp parameters for alarm. These unit are of period $1 \over f$ or about 16.6~ms at 60 ~Hz.
 @d CHIRPLENGTH 7 // number of waves long
 @d CHIRPPERIOD 200 // number of waves long
 
@@ -106,30 +109,28 @@ Then to overflow, $256-244 = 12$, thus leaving 500 ms until time-out, unless it 
 # include <avr/interrupt.h> // have need of an interrupt
 # include <avr/sleep.h> // have need of sleep
 # include <stdlib.h>
+# include <stdint.h>
+
 
 @ @<Prototypes@>=
-void ledcntl(char state); // LED ON and LED OFF
-void sirencntl(char state); // alarm siren control
-void chirp(char state); // alarm siren modulation
+void ledcntl(uint8_t state); // LED ON and LED OFF
+void sirencntl(uint8_t state); // alarm siren control
+void chirp(uint8_t state); // alarm siren modulation
 
 @
 The f\_state global variable needs the type qualifier `volatile' or optimization may eliminate it.
 f\_state is just a simple bit-flag array that keeps track what has been handled. 
 
 @<Global var...@>=
-volatile unsigned char f_state = 0; 
+volatile uint8_t f_state = 0; 
 
 @
 Here is |main|. Atmel pins default as simple inputs so the first thing is to configure to use LED and Siren pins as outputs.
 Additionally, we need the clear button to wake the device through an interrupt.
 @c
 
-@< Include @>@;
-@< Prototypes @>@;
-@< Global variables @>@;
-
 int main(void)
-{
+{@#
 
 @<Initialize pin outputs and inputs@>
 
@@ -142,7 +143,16 @@ The thought is that it's better to say that there is AC, when there isn't, as op
 @
 Here the timer is setup.
 @c
-  @<Initialize the no-wave timer@>
+@<Initialize the no-wave timer@>
+
+@ The prescaler is now set to clk/16484. 
+|"nowavecount"| is the timer preset so that overflow of the 8-bit counter happens in about 500~ms.
+With |"F_CPU"| at 8~MHz, the math goes: $\lfloor{0.5 seconds \times (8 \times 10^6 \over 16384}\rfloor = 244$.
+Then, the remainder is $256-244 = 12$, thus leaving 244 counts or about 500 ms until time-out, unless it's reset.
+
+@c
+const int8_t nowavecount = (2^8)-((NOWAVETIME/1000U)*(F_CPU/16384U)); 
+
 
 @ 
 The Trinket runs at relatively speedy 8 MHz so the slow 60 Hz signal is no issue.
@@ -166,13 +176,13 @@ Interrupts are used to wake it.
 @<Configure to wake upon interrupt...@>
 
 @
-This is the loop that does the work. It should spend most of its time in |sleep_mode|, cumming out at each interrupt event.
+This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event.
 
 @c
  for (;;) // forever
-  {
-   static unsigned char waveless = WAVETHRESHOLD;
-   static unsigned int armwait = ARMTHRESHOLD;  
+  {@#
+   static uint8_t waveless = WAVETHRESHOLD;
+   static uint16_t armwait = ARMTHRESHOLD;  
       
 @
 Now we wait in ``idle'' for any interrupt event.
@@ -206,7 +216,7 @@ Let's see which one by testing each possibility and acting on it.
 
         if(f_state & (1<<ARM)) chirp(ON); //  annunciate
  
-        TCNT1 = NOWAVETIME;  // reset the nowave timer
+        TCNT1 = nowavecount;  // reset the nowave timer
        } // end if waveless 
 
      f_state &= ~(1<<WAVES); //reset int flag since actions are complete
@@ -283,9 +293,9 @@ that |CHIRPLENGTH| and |CHIRPPERIOD| are defined a multiples of ${1 \over Hz}$.
 It may be disarmed, stopping the chirp, by pressing a button or power-cycle.
 
 @c
-void chirp(char state)
+void chirp(uint8_t state)
 {
-static unsigned char count = CHIRPLENGTH;
+static uint8_t count = CHIRPLENGTH;
 
  count = (count)?count-1:CHIRPPERIOD;
  
@@ -293,12 +303,12 @@ static unsigned char count = CHIRPLENGTH;
    else  sirencntl(ON);
 }
 
-void ledcntl(char state)
+void ledcntl(uint8_t state)
 {
   PORTB = state ? PORTB | (1<<PORTB1) : PORTB & ~(1<<PORTB1);
 }
 
-void sirencntl(char state)
+void sirencntl(uint8_t state)
 {
   PORTB = state ? PORTB | (1<<PORTB0) : PORTB & ~(1<<PORTB0);
 }
