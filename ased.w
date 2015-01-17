@@ -42,7 +42,7 @@ I had seven Adafruit Industry Trinkets just laying around. They use the Atmel
 ATTINY85 processor. The analog inputs are about 100~M$\Omega$. Not great, but
 I think it should be good enough. If we can muster 1~pf of gimmick, we will
 have $\ {1 \over 2 \pi f_c} $ of $X_c$. Ohms law indicates
-$100e6 {170 \over  {(2pi \times 60\times 1e-12)^{-1} + 100 \times 10^6)} } = 6.16 $ volts peak, ignoring
+$100 \times 10^6 ({170 \over  {X_c + 100 \times 10^6} }) = 6.16 $ volts peak, ignoring
 input pin capacitance. The steering diodes will keep the analog innards safe
 since the current is so low. Supply voltage at "BAT" is 5.5 to 16~V and it has
 a red LED on-board.
@@ -83,21 +83,9 @@ Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtin
 @d WAVES   1 // ASE detected
 @d ARM     0 // ARM for Alarm
 
-@ |"WAVETHRESHOLD"| is the number of waves, that AC must be present to consider it `ON'.
-15 counts, or waves; about 250 ms at 60 Hz.
-Range is 0 to 255 but don't take too long or the nowave timer will will overflow. Keep in mind that neither clock nor genny frequency is perfect.  
-@d WAVETHRESHOLD 15 // range maybe to 20, with a 500 ms nowave time 
-
-
-@ |"NOWAVETIME"| is the time allowed by the nowave timer to be waveless before arming the siren.
-@d NOWAVETIME 500U  // preset ms for the timer counter. This is close to maximum 
-
 
 @  This is the hold-off time in $\mu$s for wave detection. This value is used by the |"_delay_us()"| function here |@<Hold-off all interrupts...@>|.
 @d WAVEHOLDOFFTIME 100 // Range to 255
-
-@ Alarm arm delay in ``nowave'' counts of whose size is defined by time |"NOWAVETIME"|.
-@d ARMTHRESHOLD 1200 // Range to 65535
 
 @ Chirp parameters for alarm. These unit are of period $1 \over f$ or about 16.6~ms at 60 ~Hz.
 @d CHIRPLENGTH 7 // number of waves long
@@ -145,6 +133,9 @@ Here the timer is setup.
 @c
 @<Initialize the no-wave timer@>
 
+@ |"NOWAVETIME"| is the time allowed by the nowave timer to be waveless before arming the siren.
+@d NOWAVETIME 500U  // preset ms for the timer counter. This is close to maximum 
+
 @ The prescaler is now set to clk/16484. 
 |"nowavecount"| is the timer preset so that overflow of the 8-bit counter happens in about 500~ms.
 With |"F_CPU"| at 8~MHz, the math goes: $\lfloor{0.5 seconds \times (8 \times 10^6 \over 16384}\rfloor = 244$.
@@ -178,6 +169,17 @@ Interrupts are used to wake it.
 @
 This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event.
 
+@ Alarm arm delay in ``nowave'' counts of whose size is defined by time |"NOWAVETIME"|.
+@d ARMTHRESHOLD 1200 // Range to 65535
+
+
+@ |"WAVETHRESHOLD"| is the number of waves, that AC must be present to consider it `ON'.
+15 counts, or waves; about 250 ms at 60 Hz.
+Range is 0 to 255 but don't take too long or the nowave timer will will overflow. Keep in mind that neither clock nor genny frequency is perfect.  
+@d WAVETHRESHOLD 15 // range maybe to 20, with a 500 ms nowave time 
+
+
+
 @c
  for (;;) // forever
   {@#
@@ -206,6 +208,7 @@ My guess is that optimization doesn't work well across ISRs.
 The ISR would have left a flag set in |f_state|.
 Let's see which one by testing each possibility and acting on it.
 @c
+
   if(f_state & (1<<WAVES)) 
     {
      waveless = (waveless)?waveless-1:0; // countdown to 0, but not lower
@@ -377,7 +380,8 @@ Idle allows the counters and comparator to continue during sleep.
   MCUCR &= ~(1<<SM0);
 }
 
-@ @<Hold-off all interrupts...@>=
+@
+@<Hold-off all interrupts...@>=
 {
  /* Disable the analog comparator interrupt */
  ACSR &= ~(1<<ACIE);
