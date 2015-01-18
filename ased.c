@@ -5,53 +5,22 @@
 #define OFF 0
 #define SET 1
 #define CLEAR 0 \
- \
 
-#define NOWAVES 2
-#define WAVES 1
-#define ARM 0 \
-<<<<<<< HEAD
+#define NOWAVETIME 500U
+#define ARMTHRESHOLD 1200U
+#define WAVETHRESHOLD 15U
+#define CHIRPLENGTH 7
+#define CHIRPPERIOD 200 \
  \
 
 #define WAVEHOLDOFFTIME 100 \
-
-#define CHIRPLENGTH 7
-#define CHIRPPERIOD 200 \
-
-#define NOWAVETIME 500U \
-
-#define ARMTHRESHOLD 1200 \
  \
-
-#define WAVETHRESHOLD 15 \
- \
- \
-=======
-
-#define WAVETHRESHOLD 15 \
- \
-
-#define NOWAVETIME 500U \
- \
-
-#define WAVEHOLDOFFTIME 100 \
-
-#define ARMTHRESHOLD 1200 \
-
-#define CHIRPLENGTH 7
-#define CHIRPPERIOD 200 \
->>>>>>> origin/testing
 
 /*2:*/
 #line 63 "./ased.w"
 
-<<<<<<< HEAD
-/*8:*/
-#line 94 "./ased.w"
-=======
-/*11:*/
-#line 106 "./ased.w"
->>>>>>> origin/testing
+/*5:*/
+#line 80 "./ased.w"
 
 # include <avr/io.h>  
 # include <util/delay.h>  
@@ -60,69 +29,66 @@
 # include <stdlib.h> 
 # include <stdint.h> 
 
-
-<<<<<<< HEAD
-/*:8*/
+/*:5*/
 #line 64 "./ased.w"
 
-/*9:*/
-#line 103 "./ased.w"
-=======
-/*:11*/
-#line 64 "./ased.w"
+/*6:*/
+#line 90 "./ased.w"
 
-/*12:*/
-#line 115 "./ased.w"
->>>>>>> origin/testing
+typedef struct{
+uint8_t wavelesswait;
+uint16_t armwait;
+uint8_t armed;
+const uint8_t nowavecount;
+}statestruct;
+
+
+/*:6*/
+#line 65 "./ased.w"
+
+/*7:*/
+#line 99 "./ased.w"
 
 void ledcntl(uint8_t state);
 void sirencntl(uint8_t state);
 void chirp(uint8_t state);
+void waveaction(statestruct*);
+void nowaveaction(statestruct*);
+void clear(statestruct*);
 
-<<<<<<< HEAD
-/*:9*/
-#line 65 "./ased.w"
-
-/*10:*/
-#line 112 "./ased.w"
-
-volatile uint8_t f_state= 0;
-
-/*:10*/
-=======
-/*:12*/
-#line 65 "./ased.w"
-
-/*13:*/
-#line 124 "./ased.w"
-
-volatile uint8_t f_state= 0;
-
-/*:13*/
->>>>>>> origin/testing
+/*:7*/
 #line 66 "./ased.w"
 
+/*8:*/
+#line 112 "./ased.w"
+
+void(*handleirq)(statestruct*)= NULL;
+
+
+/*:8*/
+#line 67 "./ased.w"
 
 
 
-<<<<<<< HEAD
-/*:2*//*11:*/
+/*:2*//*9:*/
 #line 118 "./ased.w"
-=======
-/*:2*//*14:*/
-#line 130 "./ased.w"
->>>>>>> origin/testing
 
 
 int main(void)
 {
 
-/*28:*/
-<<<<<<< HEAD
-#line 278 "./ased.w"
-=======
-#line 275 "./ased.w"
->>>>>>> origin/testing
+/*:9*//*11:*/
+#line 133 "./ased.w"
+
+statestruct s_state= {
+.nowavecount= (uint8_t)(256-(NOWAVETIME/1000U)*(F_CPU/16384U))
+};
+
+/*:11*//*12:*/
+#line 141 "./ased.w"
+
+/*30:*/
+#line 309 "./ased.w"
 
 {
 
@@ -135,36 +101,20 @@ PCMSK|= (1<<PCINT3);
 GIMSK|= (1<<PCIE);
 }
 
-/*:28*/
-<<<<<<< HEAD
-#line 123 "./ased.w"
+/*:30*/
+#line 142 "./ased.w"
 
-
-/*:11*//*12:*/
-#line 128 "./ased.w"
-
-ledcntl(ON);
 
 /*:12*//*13:*/
-#line 133 "./ased.w"
-
-/*30:*/
-#line 329 "./ased.w"
-=======
-#line 135 "./ased.w"
-
-
-/*:14*//*15:*/
-#line 140 "./ased.w"
+#line 147 "./ased.w"
 
 ledcntl(ON);
 
-/*:15*//*16:*/
-#line 145 "./ased.w"
+/*:13*//*14:*/
+#line 152 "./ased.w"
 
-/*30:*/
-#line 326 "./ased.w"
->>>>>>> origin/testing
+/*34:*/
+#line 373 "./ased.w"
 
 {
 TCCR1= ((1<<CS10)|(1<<CS11)|(1<<CS12)|(1<<CS13));
@@ -174,37 +124,16 @@ TIMSK|= (1<<TOIE1);
 }
 
 
-/*:30*/
-<<<<<<< HEAD
-#line 134 "./ased.w"
-
-
-/*:13*//*15:*/
-#line 144 "./ased.w"
-=======
-#line 146 "./ased.w"
-
-
-/*:16*//*17:*/
+/*:34*/
 #line 153 "./ased.w"
->>>>>>> origin/testing
-
-const int8_t nowavecount= (2^8)-((NOWAVETIME/1000U)*(F_CPU/16384U));
 
 
-<<<<<<< HEAD
-/*:15*//*16:*/
-#line 154 "./ased.w"
 
-/*31:*/
-#line 362 "./ased.w"
-=======
-/*:17*//*18:*/
-#line 163 "./ased.w"
+/*:14*//*15:*/
+#line 162 "./ased.w"
 
-/*31:*/
-#line 359 "./ased.w"
->>>>>>> origin/testing
+/*35:*/
+#line 407 "./ased.w"
 
 {
 ADCSRB|= (1<<ACME);
@@ -216,111 +145,60 @@ ACSR|= (1<<ACIS1);
 ACSR|= (1<<ACIE);
 }
 
-/*:31*/
-<<<<<<< HEAD
-#line 155 "./ased.w"
+/*:35*/
+#line 163 "./ased.w"
 
 
+/*:15*//*16:*/
+#line 168 "./ased.w"
+
+sei();
 /*:16*//*17:*/
-#line 160 "./ased.w"
+#line 174 "./ased.w"
 
-sei();
-/*:17*//*18:*/
-#line 166 "./ased.w"
-
-/*32:*/
-#line 377 "./ased.w"
-=======
-#line 164 "./ased.w"
-
-
-/*:18*//*19:*/
-#line 169 "./ased.w"
-
-sei();
-/*:19*//*20:*/
-#line 175 "./ased.w"
-
-/*32:*/
-#line 374 "./ased.w"
->>>>>>> origin/testing
+/*36:*/
+#line 422 "./ased.w"
 
 {
 MCUCR&= ~(1<<SM1);
 MCUCR&= ~(1<<SM0);
 }
 
-/*:32*/
-<<<<<<< HEAD
-#line 167 "./ased.w"
+/*:36*/
+#line 175 "./ased.w"
 
 
-/*:18*//*21:*/
-#line 183 "./ased.w"
-=======
-#line 176 "./ased.w"
+
+/*:17*//*18:*/
+#line 180 "./ased.w"
+
+s_state.armwait= ARMTHRESHOLD;
 
 
-/*:20*//*21:*/
-#line 181 "./ased.w"
->>>>>>> origin/testing
+/*:18*//*19:*/
+#line 188 "./ased.w"
+
+s_state.wavelesswait= WAVETHRESHOLD;
+
+/*:19*//*20:*/
+#line 194 "./ased.w"
 
 for(;;)
 {
-static uint8_t waveless= WAVETHRESHOLD;
-static uint16_t armwait= ARMTHRESHOLD;
 
-/*:21*//*22:*/
-<<<<<<< HEAD
-#line 191 "./ased.w"
-=======
-#line 189 "./ased.w"
->>>>>>> origin/testing
+/*:20*//*21:*/
+#line 200 "./ased.w"
 
 sleep_mode();
 
-/*:22*//*23:*/
-<<<<<<< HEAD
-#line 210 "./ased.w"
+/*:21*//*22:*/
+#line 209 "./ased.w"
 
-=======
-#line 208 "./ased.w"
->>>>>>> origin/testing
-
-if(f_state&(1<<WAVES))
+if(handleirq!=NULL)
 {
-waveless= (waveless)?waveless-1:0;
-
-if(!waveless)
-{
-ledcntl(ON);
-
-if(f_state&(1<<ARM))chirp(ON);
-
-TCNT1= nowavecount;
-}
-
-f_state&= ~(1<<WAVES);
-
-}
-else if(f_state&(1<<NOWAVES))
-{
-ledcntl(OFF);
-chirp(OFF);
-waveless= WAVETHRESHOLD;
-
-armwait= (armwait)?armwait-1:0;
-if(!armwait&&~f_state&(1<<ARM))f_state|= (1<<ARM);
-
-f_state&= ~(1<<NOWAVES);
-}
-
-/*33:*/
-<<<<<<< HEAD
-#line 384 "./ased.w"
-=======
-#line 380 "./ased.w"
->>>>>>> origin/testing
+handleirq(&s_state);
+/*37:*/
+#line 433 "./ased.w"
 
 {
 
@@ -330,85 +208,112 @@ _delay_us(WAVEHOLDOFFTIME);
 ACSR|= (1<<ACIE);
 }
 
+/*:37*/
+#line 213 "./ased.w"
 
-/*:33*/
-<<<<<<< HEAD
-#line 240 "./ased.w"
-=======
-#line 237 "./ased.w"
->>>>>>> origin/testing
+handleirq= NULL;
+}
 
 }
+
 
 return 0;
+
+}
+
+/*:22*//*23:*/
+#line 233 "./ased.w"
+
+void waveaction(statestruct*s_now)
+{
+s_now->wavelesswait= 
+(s_now->wavelesswait)?s_now->wavelesswait-1:0;
+
+
+if(!s_now->wavelesswait)
+{
+ledcntl(ON);
+
+if(!s_now->armed)chirp(ON);
+s_now->armwait= ARMTHRESHOLD;
+TCNT1= s_now->nowavecount;
+}
+}
+
+/*:23*//*24:*/
+#line 253 "./ased.w"
+
+void nowaveaction(statestruct*s_now)
+{
+ledcntl(OFF);
+chirp(OFF);
+s_now->wavelesswait= WAVETHRESHOLD;
+
+s_now->armwait= (s_now->armwait)?s_now->armwait-1:0;
+
+if(!s_now->armwait)(s_now->armed= SET);
+}
+/*:24*//*25:*/
+#line 267 "./ased.w"
+
+void clear(statestruct*s_now)
+{
+s_now->armwait= ARMTHRESHOLD;
+s_now->armed= CLEAR;
 }
 
 
-/*:23*//*24:*/
-<<<<<<< HEAD
-#line 250 "./ased.w"
-=======
-#line 247 "./ased.w"
->>>>>>> origin/testing
+/*:25*//*26:*/
+#line 280 "./ased.w"
 
 
 ISR(TIMER1_OVF_vect)
 {
-f_state|= (1<<NOWAVES);
+handleirq= &nowaveaction;
 }
 
-/*:24*//*25:*/
-<<<<<<< HEAD
-#line 259 "./ased.w"
-=======
-#line 256 "./ased.w"
->>>>>>> origin/testing
+/*:26*//*27:*/
+#line 289 "./ased.w"
 
 
 ISR(ANA_COMP_vect)
 {
-f_state|= (1<<WAVES);
+handleirq= &waveaction;
 }
 
-/*:25*//*26:*/
-<<<<<<< HEAD
-#line 268 "./ased.w"
-=======
-#line 265 "./ased.w"
->>>>>>> origin/testing
+/*:27*//*28:*/
+#line 298 "./ased.w"
 
 
 ISR(PCINT0_vect)
 {
-if(PORTB&(1<<PORTB3))
-f_state&= ~(1<<ARM);
+handleirq= NULL;
 }
 
-/*:26*//*29:*/
-<<<<<<< HEAD
-#line 298 "./ased.w"
-=======
-#line 295 "./ased.w"
->>>>>>> origin/testing
+/*:28*//*31:*/
+#line 335 "./ased.w"
 
 void chirp(uint8_t state)
 {
 static uint8_t count= CHIRPLENGTH;
 
 count= (count)?count-1:CHIRPPERIOD;
-
-if(count> CHIRPLENGTH||state==OFF)sirencntl(OFF);
-else sirencntl(ON);
+sirencntl((count> CHIRPLENGTH||state==OFF)?OFF:ON);
 }
+/*:31*//*32:*/
+#line 347 "./ased.w"
 
 void ledcntl(uint8_t state)
 {
 PORTB= state?PORTB|(1<<PORTB1):PORTB&~(1<<PORTB1);
 }
 
+/*:32*//*33:*/
+#line 355 "./ased.w"
+
 void sirencntl(uint8_t state)
 {
 PORTB= state?PORTB|(1<<PORTB0):PORTB&~(1<<PORTB0);
 }
 
-/*:29*/
+/*:33*/
