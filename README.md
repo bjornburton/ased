@@ -27,9 +27,9 @@ suit you system. You will need cweave, ctangle, avr-gcc as well as pdftex, if
 you want nice documentation. 
 
 # The Fun Reason
-I wrote this for fun and not out of any real need. I wanted to learn a bit about git's branching, merging, refspec, etc. Also to brush-up on my C-skills, poor as they are. Programming on bare-metal (no OS) and on a tiny microprocessor to boot, are exciting firsts for me. And I've been wanting to try Literate Programming in Donald Knuth's Cweb, just to see what it's like. 
+I wrote this for fun and not out of any *real* need. I wanted to learn a bit about git's branching, merging, refspec, etc. Also to brush-up on my C-skills, poor as they are. Programming on bare-metal (no OS) and on a tiny microprocessor to boot, are exciting firsts for me. And I've been wanting to try Literate Programming in Donald Knuth's Cweb, just to see what it's like. 
 
-# Practical Reason
+# The Practical Reason
 With my emergency generator connected through an interlocked load-center, it's
 hard to tell when the Ancillary Service has been restored. The neighbor's
 lights offer a clue at night, but aren't reliable. Switching back to Main, from
@@ -40,23 +40,18 @@ The obvious method is to measure the voltage at the main-breaker's input, using
 a meter. One safety concern is that it's not breaker-protected making for a
 massive fault-current, should insulation be breached or the circuit shorted.
 Also, installation of a simple meter is somewhat involved, having to tap into
-live lines and, ideally, providing some form of isolation. The obvious solution
-is to have a high-impedance connection very near to the source. A small
-capacitance would do. Simple capacitive coupling can be had with a "gimmick"; a
-technique used since the 1920s. This may be several turns of THHN around the
-large-gage insulated incoming line. Since the voltage is with respect to
-neutral, and neutral is bonded to ground, just the one wire is needed to get a
-"sample". No need to mess with live conductors, just coupling to the electric
-field through the insulation already present. Installation still has some risk,
-but much less. This is still not Double insulated, so whatever gizmo is
-connected should provide an additional level of protection, but it's better
-than a copper connection.
+live lines and, ideally, providing some form of isolation. 
+
+The obvious solution is to have a high-impedance connection very near to the source.
+A small capacitance could do, with a high impedance device..
+Simple capacitive coupling can be had with a ``gimmick''; a technique used since the 1920s.
+This may be several turns of THHN around the large-gage insulated incoming line.
+Since the voltage is with respect to neutral, and neutral is bonded to ground,
+just the one wire is needed to get a ``sample''.
+No need to mess with live conductors, just coupling to the electric field through the insulation already present.
+Installation still has some risk, but much less.
 
 With access to this signal, a circuit can be built to detect the difference
 between having AC and not having AC, providing a signal to indicate that state.
 The signal provided to the generator-operator could be a lamp or buzzer.  
-
-I have seven Ada Fruit Trinkets just laying around. They use the Atmel ATTINY85
-processor. The analog inputs are about 100 M ohms. Not great, but I think it
-should be good enough. 
 
