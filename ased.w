@@ -89,7 +89,7 @@ Extensive use was made of the datasheet, Atmel ``Atmel ATtiny25, ATtiny45, ATtin
 
  @<Types@>=
 typedef struct {
-    uint8_t wavelesswait; // delay to remain as if waveless, to ensure waves
+    uint8_t wavecount; // delay to remain as if waveless, to ensure waves
     uint16_t armwait; // countdown index to arm siren
     uint8_t armed; // non-zero indicates that the siren is armed
     const uint8_t nowavecount; // time until siren arm
@@ -168,14 +168,14 @@ is set; usually done through calling sei().
 @c
   sei();
 @
-Rather than burning loops, waiting for something to happen for 16 ms, the ``sleep'' mode is used.
+Rather than burning loops, waiting 16~ms for something to happen, the ``sleep'' mode is used.
 The specific type of sleep is `idle'. In idle, execution stops but timers continue.
 Interrupts are used to wake it.
 @c
 @<Configure to wake upon interrupt...@>
 
 
-@ Alarm arm delay in ``nowave'' counts of whose size is defined by time |"NOWAVETIME"|.
+@ Alarm arm delay is in ``nowave'' counts, of a size which is defined by time |"NOWAVETIME"|.
 @d ARMTHRESHOLD 1200U // Range to 65535
 @c
  s_state.armwait = ARMTHRESHOLD;
@@ -186,7 +186,7 @@ Interrupts are used to wake it.
 Range is 0 to 255 but don't take too long or the nowave timer will will overflow. Keep in mind that neither clock nor genny frequency is perfect.
 @d WAVETHRESHOLD 15U // range maybe to 20, with a 500 ms nowave time
 @c
- s_state.wavelesswait = WAVETHRESHOLD;
+ s_state.wavecount = WAVETHRESHOLD;
 
 @
 This is the loop that does the work. It should spend most of its time in |sleep_mode|, comming out at each interrupt event.
@@ -226,28 +226,29 @@ If a wave is detected, it's counted.
 Once the counter reaches zero, the light and, if armed, the siren are activated.
 Also, the timer for nowave is reset; after all, there is a wave.
 
-If the nowave timer overflows, almost the opposite happens. The LED and siren are turned off. The waveless counter is reset. After some passes, the siren will be armed. Finally, the flag is reset, as before.
-
-
 |waveaction()| function is called every time there is a wave detected.
 @c
 void waveaction(statestruct *s_now )
 {
- s_now->wavelesswait =
-    (s_now->wavelesswait)?s_now->wavelesswait-1:0; // countdown to 0
+ s_now->wavecount =
+    (s_now->wavecount)?s_now->wavecount-1:0; // countdown to 0
 
- //  ledcntl(ON);
- if(!s_now->wavelesswait) // ancillary electric service restored
+ if(!s_now->wavecount) // ancillary electric service restored
    {
     ledcntl(ON);
 
     if(!s_now->armed) chirp(ON); //  annunciate
     s_now->armwait = ARMTHRESHOLD; // reset the arm counter
     TCNT1 = s_now->nowavecount;  // reset the nowave timer
-    } // end if wavelesswait
+    } // end if wavecount
 }
 
 @
+
+If the nowave timer overflows, interrupt |"TIMER1_OVF_vect"| calls the ISR which calls |"nowaveaction()"|.
+The LED and siren are turned off.
+The waveless counter, |"wavcount"|, is reset.
+After some passes, the siren will be armed.
 
 |nowaveaction()| is called when waves have been absent long enough for the timer to expire.
 @c
@@ -255,7 +256,7 @@ void nowaveaction(statestruct *s_now )
 {
  ledcntl(OFF);
  chirp(OFF);  // ASE dropped, stop alarm chirp
- s_now->wavelesswait = WAVETHRESHOLD; // waveless again
+ s_now->wavecount = WAVETHRESHOLD; // waveless again
 
  s_now->armwait = (s_now->armwait)?s_now->armwait-1:0;
                                       // countdown to 0, but not lower
@@ -272,7 +273,8 @@ void clear(statestruct  *s_now )
 }
 
 
-@ The ISRs are pretty skimpy as they are only used to point |handleirq()| to the correct function. The need for global variables is minimized.
+@ The ISRs are pretty skimpy as they are only used to point |handleirq()| to the correct function.
+The need for global variables is minimized.
 
 
 This is the vector for the main timer.
@@ -319,15 +321,16 @@ Here is the block that sets-up the digital I/O pins.
 }
 
 @
-Siren function will arm after a 10 minute power-loss; that is,
-the Trinket is running for about 10 minutes without seeing AC at pin \#2.
-Once armed, siren will chirp for 100 ms at a 5 second interval,
+Siren function will arm after a 10~minute power-loss; that is,
+the Trinket is running for about 10~minutes without seeing AC at pin \#2.
+Once armed, siren will chirp for 100~ms at a 5~second interval,
 only while AC is present. In fact it is called with each AC cycle interrupt so
 that |CHIRPLENGTH| and |CHIRPPERIOD| are defined a multiples of ${1 \over Hz}$.
 It may be disarmed, stopping the chirp, by pressing the ``clear'' button or a power-cycle.
 
 
-Chirp parameters for alarm. These unit are of period $1 \over f$ or about 16.6~ms at 60 ~Hz.
+Chirp parameters for alarm.
+These units are of period $1 \over f$ or about 16.6~ms at 60~Hz.
 @d CHIRPLENGTH 7 // number of waves long
 @d CHIRPPERIOD 200 // number of waves long
 
