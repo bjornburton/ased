@@ -26,10 +26,10 @@ There is a simple Makefile to build it with, but it may need to be tweaked to
 suit you system. You will need cweave, ctangle, avr-gcc as well as pdftex, if
 you want nice documentation. 
 
-* The Fun Reason
+! The Fun Reason
 Firstly, I wrote this for fun and not out of any real need. I wanted to learn a bit about git's branching, merging, refspec, etc. Also to brush-up on my C-skills, poor as they are. Programming on bare-metal (no OS) and on a tiny microprocessor to boot, are firsts for me. And I've been wanting to try Literate Programming in Donald Knuth's Cweb, just to see what it's like. 
 
-* Practical Reason:
+! Practical Reason:
 With my emergency generator connected through an interlocked load-center, it's
 hard to tell when the Ancillary Service has been restored. The neighbor's
 lights offer a clue at night, but aren't reliable. Switching back to Main, from
