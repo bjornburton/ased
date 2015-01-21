@@ -44,10 +44,10 @@ live lines and, ideally, providing some form of isolation.
 
 The obvious solution is to have a high-impedance connection very near to the source.
 A small capacitance could do, with a high impedance device..
-Simple capacitive coupling can be had with a ``gimmick''; a technique used since the 1920s.
+Simple capacitive coupling can be had with a *gimmick*; a technique used since the 1920s.
 This may be several turns of THHN around the large-gage insulated incoming line.
 Since the voltage is with respect to neutral, and neutral is bonded to ground,
-just the one wire is needed to get a ``sample''.
+just the one wire is needed to get a *sample*.
 No need to mess with live conductors, just coupling to the electric field through the insulation already present.
 Installation still has some risk, but much less.
 
