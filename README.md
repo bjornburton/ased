@@ -12,16 +12,11 @@ further processing by TeX or PDFTeX into a nice document.
 
 This does not rely on Arduino's IDE and for this reason the C code will compile
 using the gnu compiler, avr-gcc along with avr-libc. It should also compile in
-<<<<<<< HEAD
 the Arduino IDE as a "Sketch", with some modification. One issue with the
-=======
-the Arduino IDE as a "Sketch", with some modification. An issue with the
->>>>>>> 6c4d85aa132a4eb23cdbf0a9b8d55161545f099e
 Arduino IDE is that the usual  C99/C11 way of using a designator to initialize
 structure components does not work as Arduino only supports C89.
 A Second issue is that the IDE seems to muck around with the order of your code,
 putting function declarations ahead of typedefs. Actually, what it really does 
-<<<<<<< HEAD
 it guess at what you want as function declarations and inserts those. To
 aggravate the user further, the errors provided don't refer to the user's code,
 but instead, to the broken code created by the Arduino IDE. Code whose existence
@@ -37,22 +32,6 @@ suit your system.
 
 You will need cweave, ctangle, avr-gcc as well as pdftex, if you want nice
 documentation. TexLive seems to be the best.
-=======
-it guess at what you want as function declarations. To aggravate the user
-further, the errors provided don't refer to the user's code, but instead, to the
-broken code created by the Arduino IDE. Code whose existence becomes clear only
-after "verbose output" is enabled and the adulterated code is inspected. The
-official workaround is to put typedefs into a header file.
-   
-Since the IDE is generally weak, error/warning reporting is poor, documentation
-is lacking, strange workarounds are needed for many things, and it adds a layer
-of complexity (cloak of mystery?), I won't continue using it. I have enough to
-challenge me! 
-
-There is a simple Makefile to build it with, but it may need to be tweaked to
-suit you system. You will need cweave, ctangle, avr-gcc as well as pdftex, if
-you want nice documentation. TexLive seems to be the best.
->>>>>>> 6c4d85aa132a4eb23cdbf0a9b8d55161545f099e
 
 # The Fun Reason
 I wrote this for fun and not out of any *real* need. I wanted to learn a bit
